@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  clinivara-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clinivara_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - CLINIVARA_APP_ENV=production
+      - CLINIVARA_DEBUG=false
+      - CLINIVARA_AUTH_SECRET_KEY=change_this_to_a_secure_32_byte_secret_in_prod
+      - CLINIVARA_STORAGE_ROOT=/app/data/storage
+      - CLINIVARA_MAX_UPLOAD_SIZE_BYTES=26214400
+      - CLINIVARA_OCR_ENABLED=true
+      - CLINIVARA_OCR_DEFAULT_LANGUAGE=eng
+      - CLINIVARA_DEID_CONFIDENCE_THRESHOLD=0.60
+      - CLINIVARA_AUDIT_LOG_PATH=/app/data/audit/audit_events.jsonl
+    volumes:
+      # Boundary A: Restricted Raw Document Storage
+      - clinivara_boundary_a:/app/data/storage/boundary_a_raw
+      # Boundary C: Approved Output Vault
+      - clinivara_boundary_c:/app/data/storage/boundary_c_approved
+      # Token Vault for Pseudonymization
+      - clinivara_token_vault:/app/data/storage/token_vault
+      # Audit Logs
+      - clinivara_audit:/app/data/audit
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  clinivara_boundary_a:
+  clinivara_boundary_c:
+  clinivara_token_vault:
+  clinivara_audit:
