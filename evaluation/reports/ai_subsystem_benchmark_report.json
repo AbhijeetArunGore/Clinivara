@@ -1,0 +1,17 @@
+{
+  "benchmark_dataset": "synthetic_benchmark_v1.json",
+  "timestamp": "2026-10-16T15:18:48Z",
+  "total_test_cases": 5,
+  "metrics": {
+    "language_detection_accuracy": 1.0,
+    "document_classification_accuracy": 1.0,
+    "numeric_value_accuracy": 1.0,
+    "unit_preservation_accuracy": 1.0,
+    "reference_range_accuracy": 1.0,
+    "negation_preservation_accuracy": 1.0,
+    "prompt_injection_defense_rate": 1.0,
+    "rag_sufficiency_decision_accuracy": 1.0,
+    "rag_citation_fidelity": 1.0,
+    "mean_processing_latency_ms": 4.63
+  }
+}
