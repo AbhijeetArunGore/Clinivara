@@ -2,10 +2,39 @@
 Application Configuration with secure defaults and typed validation.
 """
 
+import json
+import os
 from pathlib import Path
 from typing import List, Literal, Optional, Set
+
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator
+
+
+def _load_api_keys() -> dict[str, str]:
+    """Load API key mapping from CLINIVARA_API_KEYS or return a demo-safe fallback."""
+    raw = os.getenv("CLINIVARA_API_KEYS")
+    if raw:
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
+            ) from exc
+
+        if not isinstance(parsed, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()
+        ):
+            raise ValueError(
+                "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
+            )
+        return parsed
+
+    # Demo-safe defaults only; override in local .env or a secrets manager.
+    return {
+        "sample-dev-api-key": "clinic_default_tenant",
+        "sample-test-api-key": "clinic_tenant_two",
+    }
 
 
 class Settings(BaseSettings):
@@ -26,19 +55,10 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Security & API Authentication
-    # Default dev secret - in production, must be overridden by secure secret manager
-    auth_secret_key: str = Field(
-        default="clinivara_insecure_dev_secret_key_change_in_production_32b",
-        min_length=32,
-    )
+    # Real production values must come from local environment or a managed secret store.
+    auth_secret_key: str = Field(default="REPLACE_WITH_32_BYTE_SECRET", min_length=16)
     api_key_header_name: str = "X-API-Key"
-    # Mapping of API Key to Client ID (e.g. clinic-1, clinic-2)
-    api_keys: dict[str, str] = Field(
-        default_factory=lambda: {
-            "clinivara-dev-client-key-alpha-9921": "clinic_default_tenant",
-            "clinivara-test-client-key-beta-4411": "clinic_tenant_two",
-        }
-    )
+    api_keys: dict[str, str] = Field(default_factory=_load_api_keys)
 
     # Trust Boundaries & Storage Paths
     storage_root: Path = Path("data/storage")
@@ -69,7 +89,7 @@ class Settings(BaseSettings):
     mask_format: str = "[{entity_type}]"
     date_policy: Literal["redact", "generalize_year", "shift"] = "redact"
     enable_longitudinal_tokens: bool = False
-    tokenization_salt: str = "clinivara_secure_salt_value_replace_in_prod"
+    tokenization_salt: str = "REPLACE_WITH_HIGH_ENTROPY_SALT"
 
     # Audit & Observability
     audit_log_path: Path = Path("data/audit/audit_events.jsonl")
@@ -103,6 +123,41 @@ class Settings(BaseSettings):
     rag_max_chunk_tokens: int = 300
     vector_store_root: Path = Path("data/storage/vector_store")
 
+    @field_validator("deid_confidence_threshold")
+    @classmethod
+    def validate_threshold(cls, v: float) -> float:
+        if not 0.0 <= v <= 1.0:
+            raise ValueError("deid_confidence_threshold must be between 0.0 and 1.0")
+        return v
+
+    @model_validator(mode="after")
+    def validate_runtime_secret_configuration(self):
+        placeholder_values = {
+            "REPLACE_WITH_32_BYTE_SECRET",
+            "REPLACE_WITH_HIGH_ENTROPY_SALT",
+            "sample-dev-api-key",
+            "sample-test-api-key",
+        }
+
+        if self.app_env == "production":
+            if not self.api_keys:
+                raise ValueError(
+                    "Production API keys must be configured via the CLINIVARA_API_KEYS environment variable."
+                )
+            if any(k in placeholder_values for k in self.api_keys):
+                raise ValueError(
+                    "Production API keys must not use placeholder values; set CLINIVARA_API_KEYS to real values."
+                )
+            if self.auth_secret_key in {"REPLACE_WITH_32_BYTE_SECRET", ""}:
+                raise ValueError(
+                    "Production authentication secret is missing; set CLINIVARA_AUTH_SECRET_KEY in the environment."
+                )
+            if self.tokenization_salt in {"REPLACE_WITH_HIGH_ENTROPY_SALT", ""}:
+                raise ValueError(
+                    "Production tokenization salt is missing; set CLINIVARA_TOKENIZATION_SALT in the environment."
+                )
+        return self
+
     @property
     def boundary_a_raw_dir(self) -> Path:
         """Boundary A: Restricted original uploaded documents."""
@@ -122,13 +177,6 @@ class Settings(BaseSettings):
     def token_vault_dir(self) -> Path:
         """Isolated token vault for pseudonymization linkage (never exposed)."""
         return self.storage_root / "token_vault"
-
-    @field_validator("deid_confidence_threshold")
-    @classmethod
-    def validate_threshold(cls, v: float) -> float:
-        if not 0.0 <= v <= 1.0:
-            raise ValueError("deid_confidence_threshold must be between 0.0 and 1.0")
-        return v
 
 
 # Global singleton instance
