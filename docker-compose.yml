@@ -12,7 +12,9 @@ services:
     environment:
       - CLINIVARA_APP_ENV=production
       - CLINIVARA_DEBUG=false
-      - CLINIVARA_AUTH_SECRET_KEY=change_this_to_a_secure_32_byte_secret_in_prod
+      - CLINIVARA_AUTH_SECRET_KEY=${CLINIVARA_AUTH_SECRET_KEY:?Set CLINIVARA_AUTH_SECRET_KEY in the deployment environment}
+      - CLINIVARA_TOKENIZATION_SALT=${CLINIVARA_TOKENIZATION_SALT:?Set CLINIVARA_TOKENIZATION_SALT in the deployment environment}
+      - CLINIVARA_API_KEYS=${CLINIVARA_API_KEYS:?Set CLINIVARA_API_KEYS in the deployment environment}
       - CLINIVARA_STORAGE_ROOT=/app/data/storage
       - CLINIVARA_MAX_UPLOAD_SIZE_BYTES=26214400
       - CLINIVARA_OCR_ENABLED=true
