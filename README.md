@@ -33,11 +33,11 @@ flowchart LR
     C --> D["🚦 4. Safety Gate Check"]
     D --> E["🤖 5. Friendly AI Doctor Note"]
 
-    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
-    style B fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-    style C fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
-    style D fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
-    style E fill:#ede7f6,stroke:#512da8,stroke-width:2px
+    style A fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#ffffff
+    style B fill:#1e293b,stroke:#facc15,stroke-width:2px,color:#ffffff
+    style C fill:#1e293b,stroke:#fb923c,stroke-width:2px,color:#ffffff
+    style D fill:#1e293b,stroke:#4ade80,stroke-width:2px,color:#ffffff
+    style E fill:#1e293b,stroke:#c084fc,stroke-width:2px,color:#ffffff
 ```
 
 1. **Intake**: You upload a blood test, prescription, or scan (PDF or picture).
@@ -74,10 +74,13 @@ graph TD
     Scratch --> Clean
     Clean --> AI["🤖 Multilingual AI (English / Hindi / Marathi)"]
 
-    style VaultA fill:#ffebee,stroke:#c62828,stroke-width:2px
-    style VaultB fill:#fff8e1,stroke:#f57f17,stroke-width:2px
-    style VaultC fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    style AI fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style VaultA fill:#1e293b,stroke:#ef4444,stroke-width:2px,color:#ffffff
+    style VaultB fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#ffffff
+    style VaultC fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#ffffff
+    style Raw fill:#0f172a,stroke:#f87171,stroke-width:1px,color:#ffffff
+    style Scratch fill:#0f172a,stroke:#fbbf24,stroke-width:1px,color:#ffffff
+    style Clean fill:#0f172a,stroke:#34d399,stroke-width:1px,color:#ffffff
+    style AI fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#ffffff
 ```
 
 - **Vault A (Raw Room)**: The original uploaded file is kept under lock and key. External users and AI systems can never peek inside.
