@@ -2,11 +2,29 @@
 Application Configuration with secure defaults and typed validation.
 """
 
+import json
+import os
 from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _load_api_keys() -> dict[str, str]:
+    """Load API keys from CLINIVARA_API_KEYS; never fall back to hardcoded keys."""
+    raw = os.getenv("CLINIVARA_API_KEYS")
+    if not raw:
+        return {}
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs.") from exc
+
+    if not isinstance(parsed, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()):
+        raise ValueError("CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs.")
+    return parsed
 
 
 class Settings(BaseSettings):
@@ -28,19 +46,10 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Security & API Authentication
-    # Default dev secret - in production, must be overridden by secure secret manager
-    auth_secret_key: str = Field(
-        default="clinivara_insecure_dev_secret_key_change_in_production_32b",
-        min_length=32,
-    )
+    # Real production values must come from local environment or a managed secret store.
+    auth_secret_key: str = Field(default="REPLACE_WITH_32_BYTE_SECRET", min_length=16)
     api_key_header_name: str = "X-API-Key"
-    # Mapping of API Key to Client ID (e.g. clinic-1, clinic-2)
-    api_keys: dict[str, str] = Field(
-        default_factory=lambda: {
-            "clinivara-dev-client-key-alpha-9921": "clinic_default_tenant",
-            "clinivara-test-client-key-beta-4411": "clinic_tenant_two",
-        }
-    )
+    api_keys: dict[str, str] = Field(default_factory=_load_api_keys)
     cors_allowed_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
@@ -148,6 +157,7 @@ class Settings(BaseSettings):
         """
         if self.app_env == "production":
             insecure_key_patterns = [
+                "replace_with_32_byte_secret",
                 "clinivara_insecure_dev_secret_key_change_in_production_32b",
                 "change_in_production",
                 "default_secret",
@@ -174,9 +184,14 @@ class Settings(BaseSettings):
             if self.debug:
                 raise ValueError("Production deployment rejected: CLINIVARA_DEBUG cannot be True in production.")
 
+            if not self.api_keys:
+                raise ValueError("Production deployment rejected: CLINIVARA_API_KEYS must be configured in production.")
+
             dev_test_keys = {
                 "clinivara-dev-client-key-alpha-9921",
                 "clinivara-test-client-key-beta-4411",
+                "FAKE_TEST_API_KEY_ALPHA",
+                "FAKE_TEST_API_KEY_BETA",
             }
             if any(k in self.api_keys for k in dev_test_keys):
                 raise ValueError(

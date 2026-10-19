@@ -69,8 +69,8 @@ def test_encrypted_pdf_rejection(tmp_path):
     doc.save(
         str(pdf_path),
         encryption=fitz.PDF_ENCRYPT_AES_256,
-        user_pw="securepass",
-        owner_pw="ownerpass",
+        user_pw="FAKE_TEST_USER_PASSWORD",
+        owner_pw="FAKE_TEST_OWNER_PASSWORD",
     )
     doc.close()
 

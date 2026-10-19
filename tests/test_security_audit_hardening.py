@@ -19,79 +19,97 @@ from clinivara.core.errors import SecurityViolationError
 from clinivara.storage.storage_manager import StorageManager
 
 
-def test_production_rejects_default_auth_secret():
+def test_production_rejects_default_auth_secret(monkeypatch):
     """Fail-closed: In production, default dev auth secret must raise ValidationError."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
     with pytest.raises(ValidationError) as exc_info:
         Settings(
             app_env="production",
-            auth_secret_key="clinivara_insecure_dev_secret_key_change_in_production_32b",
+            auth_secret_key="replace_with_32_byte_secret",
             tokenization_salt="prod_salt_high_entropy_random_value_99812",
-            api_keys={"real_client_key_991823712893712983712": "prod_clinic"},
             debug=False,
         )
     assert "CLINIVARA_AUTH_SECRET_KEY must be a high-entropy secret" in str(exc_info.value)
 
 
-def test_production_rejects_default_salt():
+def test_production_rejects_default_salt(monkeypatch):
     """Fail-closed: In production, default dev salt must raise ValidationError."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
     with pytest.raises(ValidationError) as exc_info:
         Settings(
             app_env="production",
             auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
             tokenization_salt="clinivara_secure_salt_value_replace_in_prod",
-            api_keys={"real_client_key_991823712893712983712": "prod_clinic"},
             debug=False,
         )
     assert "CLINIVARA_TOKENIZATION_SALT must be an isolated" in str(exc_info.value)
 
 
-def test_production_rejects_default_api_keys():
+def test_production_rejects_default_api_keys(monkeypatch):
     """Fail-closed: In production, dev/test API keys must raise ValidationError."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"FAKE_TEST_API_KEY_ALPHA": "clinic_default_tenant"}',
+    )
     with pytest.raises(ValidationError) as exc_info:
         Settings(
             app_env="production",
             auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
             tokenization_salt="prod_salt_high_entropy_random_value_99812",
-            api_keys={"clinivara-dev-client-key-alpha-9921": "clinic_default_tenant"},
             debug=False,
         )
     assert "Default development/testing API keys must be replaced" in str(exc_info.value)
 
 
-def test_production_rejects_debug_mode():
+def test_production_rejects_debug_mode(monkeypatch):
     """Fail-closed: In production, debug=True must raise ValidationError."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
     with pytest.raises(ValidationError) as exc_info:
         Settings(
             app_env="production",
             auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
             tokenization_salt="prod_salt_high_entropy_random_value_99812",
-            api_keys={"real_client_key_991823712893712983712": "prod_clinic"},
             debug=True,
         )
     assert "CLINIVARA_DEBUG cannot be True in production" in str(exc_info.value)
 
 
-def test_production_rejects_wildcard_cors():
+def test_production_rejects_wildcard_cors(monkeypatch):
     """Fail-closed: In production, wildcard CORS origin must raise ValidationError."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
     with pytest.raises(ValidationError) as exc_info:
         Settings(
             app_env="production",
             auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
             tokenization_salt="prod_salt_high_entropy_random_value_99812",
-            api_keys={"real_client_key_991823712893712983712": "prod_clinic"},
             debug=False,
             cors_allowed_origins=["*"],
         )
     assert "Wildcard '*' in CLINIVARA_CORS_ALLOWED_ORIGINS is forbidden" in str(exc_info.value)
 
 
-def test_production_accepts_valid_high_entropy_configuration():
+def test_production_accepts_valid_high_entropy_configuration(monkeypatch):
     """Verification: Properly injected production secrets pass validation."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"clin_prod_key_991823712893712983712": "production_hospital_alpha"}',
+    )
     prod_settings = Settings(
         app_env="production",
         auth_secret_key="prod_super_secure_entropy_key_length_32_bytes_min",
         tokenization_salt="prod_salt_high_entropy_random_value_99812",
-        api_keys={"clin_prod_key_991823712893712983712": "production_hospital_alpha"},
         debug=False,
         cors_allowed_origins=["https://clinivara.hospital.internal"],
     )
@@ -161,7 +179,7 @@ def test_chunked_streaming_upload_limit(client):
 
     response = client.post(
         "/api/v1/documents",
-        headers={"X-API-Key": "clinivara-dev-client-key-alpha-9921"},
+        headers={"X-API-Key": "FAKE_TEST_API_KEY_ALPHA"},
         files={"file": ("oversized.pdf", oversized_file, "application/pdf")},
     )
     assert response.status_code == 413
