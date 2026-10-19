@@ -22,7 +22,7 @@ from clinivara.schemas.approved_output import (
 from clinivara.storage.storage_manager import storage_manager
 
 client = TestClient(app)
-VALID_API_KEY = "clinivara-dev-client-key-alpha-9921"
+VALID_API_KEY = "FAKE_TEST_API_KEY_ALPHA"
 TENANT_ID = "clinic_default_tenant"
 
 
