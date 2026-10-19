@@ -5,7 +5,7 @@
 
 ## Authentication
 All document endpoints require an API Key supplied via the `X-API-Key` HTTP header.
-- Development Default: `X-API-Key: clinivara-dev-client-key-alpha-9921`
+- Supply a configured API key through your local environment or secret manager. The value below is a placeholder, not a working credential.
 
 ---
 
@@ -18,7 +18,7 @@ Accepts a multipart file upload (`application/pdf`, `image/png`, or `image/jpeg`
 ```http
 POST /api/v1/documents HTTP/1.1
 Host: localhost:8000
-X-API-Key: clinivara-dev-client-key-alpha-9921
+X-API-Key: REPLACE_WITH_API_KEY_FROM_ENVIRONMENT
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -52,7 +52,7 @@ Retrieves processing stage and permitted quality metadata without disclosing raw
 ```http
 GET /api/v1/documents/a81d4fe6-0310-449e-b7a4-97c27181f9b3/status HTTP/1.1
 Host: localhost:8000
-X-API-Key: clinivara-dev-client-key-alpha-9921
+X-API-Key: REPLACE_WITH_API_KEY_FROM_ENVIRONMENT
 ```
 
 ### Response (HTTP 200 OK)
@@ -80,7 +80,7 @@ Downstream clinical AI interface. Returns strictly policy-approved, independentl
 ```http
 GET /api/v1/documents/a81d4fe6-0310-449e-b7a4-97c27181f9b3/result HTTP/1.1
 Host: localhost:8000
-X-API-Key: clinivara-dev-client-key-alpha-9921
+X-API-Key: REPLACE_WITH_API_KEY_FROM_ENVIRONMENT
 ```
 
 ### Response (HTTP 200 OK)
