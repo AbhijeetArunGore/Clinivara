@@ -12,30 +12,25 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _load_api_keys() -> dict[str, str]:
-    """Load API key mapping from CLINIVARA_API_KEYS or return a demo-safe fallback."""
+    """Load API keys from CLINIVARA_API_KEYS; never fall back to hardcoded keys."""
     raw = os.getenv("CLINIVARA_API_KEYS")
-    if raw:
-        try:
-            parsed = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise ValueError(
-                "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
-            ) from exc
+    if not raw:
+        return {}
 
-        if not isinstance(parsed, dict) or not all(
-            isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()
-        ):
-            raise ValueError(
-                "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
-            )
-        return parsed
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
+        ) from exc
 
-    # Demo-safe defaults only; override in local .env or a secrets manager.
-    return {
-        "sample-dev-api-key": "clinic_default_tenant",
-        "sample-test-api-key": "clinic_tenant_two",
-    }
-
+    if not isinstance(parsed, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()
+    ):
+        raise ValueError(
+            "CLINIVARA_API_KEYS must be a JSON object mapping API keys to tenant IDs."
+        )
+    return parsed
 
 class Settings(BaseSettings):
     """

@@ -1,13 +1,19 @@
-"""
-Pytest configuration, fixtures, and synthetic document generators.
-"""
+"""Pytest configuration, fixtures, and synthetic document generators."""
 
 import io
+import os
+
 import pytest
 from pathlib import Path
 from PIL import Image, ImageDraw
 import fitz  # PyMuPDF
 from fastapi.testclient import TestClient
+
+# Test-only keys are deliberately fake and set before application settings are imported.
+os.environ.setdefault(
+    "CLINIVARA_API_KEYS",
+    '{"FAKE_TEST_API_KEY_ALPHA":"clinic_default_tenant","FAKE_TEST_API_KEY_BETA":"clinic_tenant_two"}',
+)
 
 from clinivara.core.config import settings
 from clinivara.main import app
@@ -22,14 +28,14 @@ def client():
 
 @pytest.fixture
 def auth_headers():
-    """Valid authentication header for tenant clinic_default_tenant."""
-    return {"X-API-Key": "clinivara-dev-client-key-alpha-9921"}
+    """Valid test-only authentication header for the default tenant."""
+    return {"X-API-Key": "FAKE_TEST_API_KEY_ALPHA"}
 
 
 @pytest.fixture
 def tenant_two_headers():
-    """Valid authentication header for tenant clinic_tenant_two."""
-    return {"X-API-Key": "clinivara-test-client-key-beta-4411"}
+    """Valid test-only authentication header for the second tenant."""
+    return {"X-API-Key": "FAKE_TEST_API_KEY_BETA"}
 
 
 @pytest.fixture
