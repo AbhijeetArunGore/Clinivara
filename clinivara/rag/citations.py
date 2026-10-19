@@ -3,7 +3,6 @@ Citation Generator and Evidence Provenance Verifier.
 Ensures every claim is tied to a verifiable chunk in the source document.
 """
 
-from typing import List, Optional
 from clinivara.rag.chunking import DocumentChunk
 from clinivara.schemas.ai import Citation
 
@@ -23,9 +22,9 @@ class CitationManager:
 
     @staticmethod
     def verify_citations(
-        citations: List[Citation],
-        available_chunks: List[DocumentChunk],
-    ) -> List[str]:
+        citations: list[Citation],
+        available_chunks: list[DocumentChunk],
+    ) -> list[str]:
         """Verify that citations correspond to known chunks in the document."""
         chunk_texts = {c.text.strip().lower() for c in available_chunks}
         warnings = []

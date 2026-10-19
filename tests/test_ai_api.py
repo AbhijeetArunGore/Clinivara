@@ -73,7 +73,7 @@ def test_ai_languages_endpoint():
     assert resp.status_code == 200
     languages = resp.json()
     assert len(languages) >= 3
-    lang_codes = [l["code"] for l in languages]
+    lang_codes = [lang["code"] for lang in languages]
     assert "en" in lang_codes
     assert "hi" in lang_codes
     assert "mr" in lang_codes
@@ -106,7 +106,7 @@ def test_get_clinical_data_authenticated(setup_test_approved_document):
 
 def test_explain_document_trilingual(setup_test_approved_document):
     doc_id = setup_test_approved_document
-    
+
     # 1. English
     resp_en = client.post(
         f"/api/v1/ai/documents/{doc_id}/explain",

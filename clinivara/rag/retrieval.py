@@ -3,11 +3,10 @@ Grounded Clinical Document Retrieval and Question Answering Engine.
 Enforces evidence sufficiency thresholds and returns INSUFFICIENT_EVIDENCE when unsupported.
 """
 
-from typing import List, Optional
 from clinivara.ai.guardrails.injection_guard import PromptInjectionGuard
 from clinivara.ai.prompts.registry import prompt_registry
 from clinivara.ai.providers import get_llm_provider
-from clinivara.rag.chunking import ClinicalDocumentChunker, DocumentChunk
+from clinivara.rag.chunking import ClinicalDocumentChunker
 from clinivara.rag.citations import CitationManager
 from clinivara.rag.indexing import document_index_manager
 from clinivara.schemas.ai import Citation, QuestionAnswerRequest, QuestionAnswerResponse
@@ -65,9 +64,7 @@ class ClinicalRetriever:
         ranked_results = index.search(query=question, top_k=5)
 
         # 4. Filter by relevance threshold
-        relevant_chunks = [
-            (chunk, score) for chunk, score in ranked_results if score >= self.relevance_threshold
-        ]
+        relevant_chunks = [(chunk, score) for chunk, score in ranked_results if score >= self.relevance_threshold]
 
         if not relevant_chunks:
             return QuestionAnswerResponse(
@@ -81,9 +78,8 @@ class ClinicalRetriever:
             )
 
         # 5. Build citations
-        citations: List[Citation] = [
-            self.citation_manager.create_citation_from_chunk(chunk, score)
-            for chunk, score in relevant_chunks[:3]
+        citations: list[Citation] = [
+            self.citation_manager.create_citation_from_chunk(chunk, score) for chunk, score in relevant_chunks[:3]
         ]
 
         # 6. Format prompt for LLM

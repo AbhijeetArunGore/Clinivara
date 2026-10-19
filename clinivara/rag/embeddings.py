@@ -4,8 +4,7 @@ Includes lightweight local TF-IDF / Sublinear n-gram vectorizer supporting Engli
 """
 
 from abc import ABC, abstractmethod
-import math
-from typing import List
+
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -14,11 +13,11 @@ class EmbeddingProvider(ABC):
     """Abstract interface for dense/sparse text vectorization."""
 
     @abstractmethod
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> list[float]:
         pass
 
     @abstractmethod
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         pass
 
 
@@ -40,7 +39,7 @@ class LocalMultilingualEmbedder(EmbeddingProvider):
         )
         self._is_fitted = False
 
-    def fit(self, texts: List[str]) -> None:
+    def fit(self, texts: list[str]) -> None:
         """Fit vocabulary on the provided document corpus."""
         valid_texts = [t for t in texts if t and t.strip()]
         if not valid_texts:
@@ -48,17 +47,17 @@ class LocalMultilingualEmbedder(EmbeddingProvider):
         self.vectorizer.fit(valid_texts)
         self._is_fitted = True
 
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> list[float]:
         return self.embed_batch([text])[0]
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         if not self._is_fitted:
             self.fit(texts)
 
         clean_texts = [t if t and t.strip() else "empty" for t in texts]
         matrix = self.vectorizer.transform(clean_texts)
         dense = matrix.toarray()
-        
+
         # L2-normalize vectors for cosine similarity dot-product
         norms = np.linalg.norm(dense, axis=1, keepdims=True)
         norms[norms == 0] = 1.0

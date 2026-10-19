@@ -5,25 +5,25 @@ Ensures zero hallucinated values, preserved units, and invariant negations.
 """
 
 import re
-from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
-from clinivara.schemas.ai import Citation, ClinicalObservation, GroundedExplanation
+from clinivara.schemas.ai import ClinicalObservation, GroundedExplanation
 
 
 class AuditFinding(BaseModel):
     check_type: str
     severity: str = Field(description="'INFO', 'WARNING', or 'CRITICAL'")
     description: str
-    affected_text: Optional[str] = None
-    expected: Optional[str] = None
-    actual: Optional[str] = None
+    affected_text: str | None = None
+    expected: str | None = None
+    actual: str | None = None
 
 
 class ConsistencyAuditResult(BaseModel):
     passed: bool
     audit_score: float = Field(ge=0.0, le=1.0)
-    findings: List[AuditFinding] = Field(default_factory=list)
+    findings: list[AuditFinding] = Field(default_factory=list)
     has_critical_error: bool = False
 
 
@@ -32,11 +32,11 @@ class ClinicalConsistencyAuditor:
 
     def audit_observations(
         self,
-        observations: List[ClinicalObservation],
+        observations: list[ClinicalObservation],
         approved_source_text: str,
     ) -> ConsistencyAuditResult:
         """Verify that every extracted observation value and unit is grounded in approved text."""
-        findings: List[AuditFinding] = []
+        findings: list[AuditFinding] = []
         source_lower = approved_source_text.lower()
 
         for obs in observations:
@@ -92,7 +92,7 @@ class ClinicalConsistencyAuditor:
         approved_source_text: str,
     ) -> ConsistencyAuditResult:
         """Verify that generated explanations do not fabricate numbers or drop citations."""
-        findings: List[AuditFinding] = []
+        findings: list[AuditFinding] = []
         source_lower = approved_source_text.lower()
 
         # 1. Require citations for non-empty explanation

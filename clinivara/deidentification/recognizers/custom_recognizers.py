@@ -2,7 +2,6 @@
 Presidio custom recognizers for clinical identifiers, MRNs, and Indian health documents.
 """
 
-from typing import List
 from clinivara.deidentification.recognizers.patterns import (
     AADHAAR_CONTEXT,
     AADHAAR_REGEX,
@@ -19,7 +18,7 @@ from clinivara.deidentification.recognizers.patterns import (
 )
 
 
-def build_custom_presidio_recognizers() -> List[object]:
+def build_custom_presidio_recognizers() -> list[object]:
     """
     Construct Presidio PatternRecognizer instances for clinical entities.
     """

@@ -3,12 +3,12 @@ Unit tests for ingestion validation, magic bytes, size limits, and security cons
 """
 
 import io
+
+import pymupdf as fitz
 import pytest
 from PIL import Image
-import fitz
 
 from clinivara.core.errors import (
-    DocumentTooLargeError,
     InvalidDocumentError,
     SecurityViolationError,
 )

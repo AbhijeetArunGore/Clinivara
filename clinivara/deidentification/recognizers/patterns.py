@@ -19,8 +19,18 @@ ABHA_CONTEXT = ["abha", "ndhm", "ayushman", "health id", "pmjay"]
 # Structured patterns like MRN-12345, UHID: 987654, HSP-4567, PID: A123456
 HOSPITAL_MRN_REGEX = r"\b(?:MRN|UHID|PID|HSP|HOSP|IPD|OPD)[-:\s#]{1,3}[A-Z0-9\-/]{4,16}\b"
 MRN_CONTEXT = [
-    "mrn", "uhid", "medical record", "record number", "patient id", "chart number",
-    "ipd no", "opd no", "admission no", "case no", "reg no", "registration"
+    "mrn",
+    "uhid",
+    "medical record",
+    "record number",
+    "patient id",
+    "chart number",
+    "ipd no",
+    "opd no",
+    "admission no",
+    "case no",
+    "reg no",
+    "registration",
 ]
 
 # Indian Phone Numbers (+91 or starting with 6, 7, 8, 9)

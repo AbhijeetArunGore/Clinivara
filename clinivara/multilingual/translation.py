@@ -3,7 +3,7 @@ Multilingual clinical translation service preserving clinical fidelity.
 """
 
 import re
-from typing import List, Tuple
+
 from clinivara.multilingual.terminology import clinical_terminology
 from clinivara.schemas.ai import TranslationResponse
 
@@ -58,7 +58,7 @@ class ClinicalTranslationService:
             "daily": "दररोज",
         }
 
-    def _extract_preserved_terms(self, text: str) -> List[str]:
+    def _extract_preserved_terms(self, text: str) -> list[str]:
         """Collect all numbers, units, and drug names that must be strictly preserved."""
         preserved = []
         for pat in PRESERVED_PATTERNS:

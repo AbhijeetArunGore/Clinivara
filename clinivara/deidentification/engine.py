@@ -10,7 +10,7 @@ Combines:
 """
 
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from clinivara.audit.audit_logger import audit_logger
 from clinivara.core.config import settings
@@ -27,18 +27,77 @@ from clinivara.deidentification.recognizers.patterns import (
 from clinivara.deidentification.token_vault import token_vault
 
 # Protected clinical vocabulary that must NEVER be redacted as identifiers
-PROTECTED_CLINICAL_TERMS: Set[str] = {
-    "diabetes", "type 2 diabetes", "hypertension", "asthma", "pneumonia",
-    "covid-19", "anemia", "tuberculosis", "chronic kidney disease",
-    "hba1c", "glucose", "creatinine", "hemoglobin", "wbc", "rbc", "platelet",
-    "sodium", "potassium", "bilirubin", "ast", "alt", "urea", "bun",
-    "metformin", "lisinopril", "aspirin", "atorvastatin", "amlodipine",
-    "insulin", "amoxicillin", "paracetamol", "ibuprofen", "omeprazole",
-    "negative", "positive", "normal", "abnormal", "elevated", "borderline",
-    "mg/dl", "mmol/l", "g/dl", "miu/l", "meq/l", "cells/mcl", "%", "mmhg",
-    "outpatient clinic note", "outpatient clinic", "clinic note", "discharge summary",
-    "emergency department", "hospital", "clinic", "department",
-    "hs", "po", "bid", "tid", "qid", "prn", "stat", "pan", "mrn", "uhid", "abha", "pid", "hsp", "dob", "bp",
+PROTECTED_CLINICAL_TERMS: set[str] = {
+    "diabetes",
+    "type 2 diabetes",
+    "hypertension",
+    "asthma",
+    "pneumonia",
+    "covid-19",
+    "anemia",
+    "tuberculosis",
+    "chronic kidney disease",
+    "hba1c",
+    "glucose",
+    "creatinine",
+    "hemoglobin",
+    "wbc",
+    "rbc",
+    "platelet",
+    "sodium",
+    "potassium",
+    "bilirubin",
+    "ast",
+    "alt",
+    "urea",
+    "bun",
+    "metformin",
+    "lisinopril",
+    "aspirin",
+    "atorvastatin",
+    "amlodipine",
+    "insulin",
+    "amoxicillin",
+    "paracetamol",
+    "ibuprofen",
+    "omeprazole",
+    "negative",
+    "positive",
+    "normal",
+    "abnormal",
+    "elevated",
+    "borderline",
+    "mg/dl",
+    "mmol/l",
+    "g/dl",
+    "miu/l",
+    "meq/l",
+    "cells/mcl",
+    "%",
+    "mmhg",
+    "outpatient clinic note",
+    "outpatient clinic",
+    "clinic note",
+    "discharge summary",
+    "emergency department",
+    "hospital",
+    "clinic",
+    "department",
+    "hs",
+    "po",
+    "bid",
+    "tid",
+    "qid",
+    "prn",
+    "stat",
+    "pan",
+    "mrn",
+    "uhid",
+    "abha",
+    "pid",
+    "hsp",
+    "dob",
+    "bp",
 }
 
 
@@ -56,7 +115,7 @@ class DeidentifiedSpan:
 class DeidentificationEngine:
     """Multi-layer sensitive entity detection and de-identification engine."""
 
-    def __init__(self, policy: Optional[DeidentificationPolicy] = None):
+    def __init__(self, policy: DeidentificationPolicy | None = None):
         self.policy = policy or default_policy
         self._analyzer = None
         self._init_presidio()
@@ -83,9 +142,9 @@ class DeidentificationEngine:
             # Engine falls back gracefully to deterministic multi-pattern scanner.
             self._analyzer = None
 
-    def _detect_pattern_spans(self, text: str) -> List[DeidentifiedSpan]:
+    def _detect_pattern_spans(self, text: str) -> list[DeidentifiedSpan]:
         """Deterministic pattern matching for high-confidence structured identifiers."""
-        spans: List[DeidentifiedSpan] = []
+        spans: list[DeidentifiedSpan] = []
 
         patterns = [
             (re.compile(HOSPITAL_MRN_REGEX, re.IGNORECASE), "PATIENT_ID", 0.98),
@@ -97,10 +156,30 @@ class DeidentificationEngine:
             (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"), "EMAIL_ADDRESS", 0.98),
             # Explicit dates (e.g. 12/04/1985, 2024-05-19, 15-Aug-1990)
             (re.compile(r"\b(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})\b"), "DATE_TIME", 0.90),
-            (re.compile(r"\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+\d{2,4}\b", re.IGNORECASE), "DATE_TIME", 0.90),
-            (re.compile(r"\b\d{1,2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*-\d{2,4}\b", re.IGNORECASE), "DATE_TIME", 0.90),
+            (
+                re.compile(
+                    r"\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+\d{2,4}\b",
+                    re.IGNORECASE,
+                ),
+                "DATE_TIME",
+                0.90,
+            ),
+            (
+                re.compile(
+                    r"\b\d{1,2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*-\d{2,4}\b", re.IGNORECASE
+                ),
+                "DATE_TIME",
+                0.90,
+            ),
             # Patient Name prefix (e.g. Patient: John Doe, Pt Name: Sunita Rao)
-            (re.compile(r"\b(?:Patient(?:\s+Name)?|Pt(?:\s+Name)?)[ \t]*:[ \t]*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b", re.IGNORECASE), "PERSON", 0.95),
+            (
+                re.compile(
+                    r"\b(?:Patient(?:\s+Name)?|Pt(?:\s+Name)?)[ \t]*:[ \t]*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b",
+                    re.IGNORECASE,
+                ),
+                "PERSON",
+                0.95,
+            ),
         ]
 
         for regex, entity_type, score in patterns:
@@ -130,12 +209,12 @@ class DeidentificationEngine:
 
         return spans
 
-    def _detect_presidio_spans(self, text: str) -> List[DeidentifiedSpan]:
+    def _detect_presidio_spans(self, text: str) -> list[DeidentifiedSpan]:
         """Detect entities using Presidio Analyzer if initialized."""
         if not self._analyzer:
             return []
 
-        spans: List[DeidentifiedSpan] = []
+        spans: list[DeidentifiedSpan] = []
         try:
             results = self._analyzer.analyze(
                 text=text,
@@ -147,7 +226,7 @@ class DeidentificationEngine:
                 if res.entity_type in ("ORGANIZATION", "NRP"):
                     continue
 
-                raw_slice = text[res.start:res.end]
+                raw_slice = text[res.start : res.end]
                 # Filter out protected clinical terms
                 if raw_slice.lower() in PROTECTED_CLINICAL_TERMS:
                     continue
@@ -171,19 +250,19 @@ class DeidentificationEngine:
         tenant_id: str,
         document_id: str,
         correlation_id: str,
-    ) -> Tuple[str, Dict[str, int], List[Dict[str, Any]]]:
+    ) -> tuple[str, dict[str, int], list[dict[str, Any]]]:
         """
         Detect sensitive entities and apply configured transformation policies.
         Returns:
             (sanitized_text, transformed_counts, safe_entity_summary)
         """
         # 1. Gather candidate spans from both Presidio and pattern recognizers
-        candidates: List[DeidentifiedSpan] = []
+        candidates: list[DeidentifiedSpan] = []
         candidates.extend(self._detect_pattern_spans(text))
         candidates.extend(self._detect_presidio_spans(text))
 
         # 2. Filter by policy threshold
-        filtered: List[DeidentifiedSpan] = []
+        filtered: list[DeidentifiedSpan] = []
         for span in candidates:
             rule = self.policy.get_rule_for_entity(span.entity_type)
             if span.score >= rule.min_confidence:
@@ -191,7 +270,7 @@ class DeidentificationEngine:
 
         # 3. Resolve overlaps: highest confidence/specific score wins
         filtered.sort(key=lambda s: (-s.score, -(s.end - s.start), s.start))
-        selected: List[DeidentifiedSpan] = []
+        selected: list[DeidentifiedSpan] = []
         for s in filtered:
             if not any(max(s.start, sel.start) < min(s.end, sel.end) for sel in selected):
                 selected.append(s)
@@ -200,8 +279,8 @@ class DeidentificationEngine:
         selected.sort(key=lambda s: s.start)
 
         # 4. Apply transformations in reverse order to preserve string offsets
-        transformed_counts: Dict[str, int] = {}
-        safe_entity_summary: List[Dict[str, Any]] = []
+        transformed_counts: dict[str, int] = {}
+        safe_entity_summary: list[dict[str, Any]] = []
 
         chars = list(text)
         for span in reversed(selected):
@@ -228,16 +307,18 @@ class DeidentificationEngine:
                 replacement = f"[{rule.mask_label}]"
 
             # Apply replacement
-            chars[span.start:span.end] = list(replacement)
+            chars[span.start : span.end] = list(replacement)
 
             # Record safe aggregate statistics (never logging raw text)
             transformed_counts[rule.mask_label] = transformed_counts.get(rule.mask_label, 0) + 1
-            safe_entity_summary.append({
-                "entity_type": span.entity_type,
-                "mask_label": rule.mask_label,
-                "confidence_score": round(span.score, 2),
-                "span_length": span.end - span.start,
-            })
+            safe_entity_summary.append(
+                {
+                    "entity_type": span.entity_type,
+                    "mask_label": rule.mask_label,
+                    "confidence_score": round(span.score, 2),
+                    "span_length": span.end - span.start,
+                }
+            )
 
         sanitized_text = "".join(chars)
 

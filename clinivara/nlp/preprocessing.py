@@ -3,14 +3,13 @@ Multilingual clinical text preprocessing and sentence segmentation.
 """
 
 import re
-from typing import List
 
 
 class ClinicalPreprocessor:
     """Preprocesses multilingual clinical text into coherent sentences and semantic tokens."""
 
     @staticmethod
-    def split_sentences(text: str) -> List[str]:
+    def split_sentences(text: str) -> list[str]:
         """
         Splits text into sentences supporting both Latin (. ? !) and Devanagari (। ॥ .) terminators.
         Preserves decimal numbers like '8.4%' without splitting.
@@ -35,7 +34,7 @@ class ClinicalPreprocessor:
         return clean_sentences
 
     @classmethod
-    def segment_sentences(cls, text: str) -> List[str]:
+    def segment_sentences(cls, text: str) -> list[str]:
         return cls.split_sentences(text)
 
 

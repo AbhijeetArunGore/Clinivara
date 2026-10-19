@@ -6,7 +6,6 @@ units, dosages, negative signs, or comparison operators.
 """
 
 import re
-from typing import Dict, List, Tuple
 
 # Critical clinical indicators and units that must not be corrupted
 CLINICAL_UNITS = [
@@ -31,12 +30,12 @@ class DataQualityValidator:
     def validate_preservation(
         original_text: str,
         cleaned_text: str,
-    ) -> Tuple[bool, List[str], Dict[str, int]]:
+    ) -> tuple[bool, list[str], dict[str, int]]:
         """
         Compare original and cleaned text for preservation of critical clinical tokens.
         """
-        warnings: List[str] = []
-        metrics: Dict[str, int] = {}
+        warnings: list[str] = []
+        metrics: dict[str, int] = {}
 
         # 1. Check preservation of laboratory comparison operators
         for op in CLINICAL_OPERATORS:

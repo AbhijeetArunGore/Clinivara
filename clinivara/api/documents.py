@@ -6,15 +6,17 @@ Document management REST API endpoints:
 - DELETE /api/v1/documents/{document_id}
 """
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from clinivara.api.dependencies import get_current_tenant
 from clinivara.audit.audit_logger import audit_logger
+from clinivara.core.config import settings
 from clinivara.core.errors import (
     ClinivaraError,
     DocumentNotFoundError,
+    DocumentTooLargeError,
     UnapprovedOutputAccessError,
     UnauthorizedAccessError,
 )
@@ -58,7 +60,22 @@ async def upload_document(
     correlation_id = generate_correlation_id()
 
     try:
-        content = await file.read()
+        # Stream file in bounded chunks to prevent memory exhaustion / DoS
+        chunk_size = 1024 * 1024  # 1 MB
+        chunks = []
+        total_bytes = 0
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            total_bytes += len(chunk)
+            if total_bytes > settings.max_upload_size_bytes:
+                raise DocumentTooLargeError(
+                    f"Uploaded document exceeds maximum size of {settings.max_upload_size_bytes // (1024 * 1024)} MB."
+                )
+            chunks.append(chunk)
+
+        content = b"".join(chunks)
 
         # 1. Staging into Boundary A
         document_id, staged_path, digest, page_count = document_stager.stage_upload(
@@ -104,7 +121,7 @@ async def upload_document(
             tenant_id=tenant_id,
             status=decision,
             sha256_digest=digest,
-            received_at=datetime.now(timezone.utc).isoformat(),
+            received_at=datetime.now(UTC).isoformat(),
             message=f"Document processed with release decision: {decision}.",
         )
 
@@ -157,7 +174,7 @@ async def get_document_status(
         error_code=meta.get("error_code"),
         warnings=meta.get("warnings", []),
         pages_processed=meta.get("page_count"),
-        updated_at=meta.get("updated_at", datetime.now(timezone.utc).isoformat()),
+        updated_at=meta.get("updated_at", datetime.now(UTC).isoformat()),
     )
 
 

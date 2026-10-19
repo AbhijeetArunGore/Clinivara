@@ -4,9 +4,9 @@ Executes end-to-end clinical document analysis on Boundary C approved outputs.
 Strictly isolates data, audits facts against source evidence, and supports English, Hindi, and Marathi.
 """
 
-from enum import Enum
 import time
-from typing import Any, Dict, List, Literal, Optional
+from enum import StrEnum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from clinivara.ai.guardrails.consistency_auditor import ClinicalConsistencyAuditor
@@ -19,17 +19,15 @@ from clinivara.multilingual.language_detection import LanguageDetector
 from clinivara.multilingual.translation import MultilingualTranslator
 from clinivara.schemas.ai import (
     Citation,
-    ClinicalObservation,
     DocumentClassificationResult,
     ExtractedClinicalData,
     GroundedExplanation,
-    KeyFindingExplanation,
 )
 from clinivara.schemas.approved_output import ApprovedDocumentOutput
 from clinivara.storage.storage_manager import storage_manager
 
 
-class WorkflowState(str, Enum):
+class WorkflowState(StrEnum):
     QUEUED = "QUEUED"
     PROCESSING = "PROCESSING"
     EXTRACTED = "EXTRACTED"
@@ -58,19 +56,20 @@ class StageTiming(BaseModel):
 
 class WorkflowResult(BaseModel):
     """Complete typed execution record of the AI document analysis pipeline."""
+
     model_config = ConfigDict(frozen=True)
 
     workflow_id: str
     document_id: str
     tenant_id: str
     status: WorkflowState
-    state_history: List[str]
-    classification: Optional[DocumentClassificationResult] = None
-    clinical_data: Optional[ExtractedClinicalData] = None
-    explanation: Optional[GroundedExplanation] = None
-    timings: List[StageTiming] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    errors: List[str] = Field(default_factory=list)
+    state_history: list[str]
+    classification: DocumentClassificationResult | None = None
+    clinical_data: ExtractedClinicalData | None = None
+    explanation: GroundedExplanation | None = None
+    timings: list[StageTiming] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 class ClinicalAnalysisWorkflow:
@@ -85,7 +84,7 @@ class ClinicalAnalysisWorkflow:
         self.translator = MultilingualTranslator()
         self.llm_provider = get_llm_provider()
 
-    def _transition(self, current_state: WorkflowState, next_state: WorkflowState, history: List[str]) -> WorkflowState:
+    def _transition(self, current_state: WorkflowState, next_state: WorkflowState, history: list[str]) -> WorkflowState:
         if next_state not in PERMITTED_TRANSITIONS.get(current_state, []):
             raise ValueError(f"Illegal state transition from {current_state} to {next_state}")
         history.append(f"{current_state} -> {next_state}")
@@ -96,15 +95,15 @@ class ClinicalAnalysisWorkflow:
         tenant_id: str,
         document_id: str,
         target_language: str = "en",
-        approved_doc: Optional[ApprovedDocumentOutput] = None,
+        approved_doc: ApprovedDocumentOutput | None = None,
     ) -> WorkflowResult:
         """
         Execute analysis workflow on approved document output.
         """
-        history: List[str] = []
-        timings: List[StageTiming] = []
-        warnings: List[str] = []
-        errors: List[str] = []
+        history: list[str] = []
+        timings: list[StageTiming] = []
+        warnings: list[str] = []
+        errors: list[str] = []
         state = WorkflowState.QUEUED
         history.append(f"INITIAL: {state}")
 
@@ -130,12 +129,20 @@ class ClinicalAnalysisWorkflow:
             # 2. Language & Script Detection
             t_start = time.perf_counter()
             lang_detect = self.language_detector.detect_language(sanitized_text)
-            timings.append(StageTiming(stage_name="language_detection", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(
+                    stage_name="language_detection", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)
+                )
+            )
 
             # 3. Document Classification
             t_start = time.perf_counter()
             classification = self.document_classifier.classify(sanitized_text)
-            timings.append(StageTiming(stage_name="document_classification", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(
+                    stage_name="document_classification", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)
+                )
+            )
 
             # 4. Clinical Extraction
             t_start = time.perf_counter()
@@ -145,7 +152,11 @@ class ClinicalAnalysisWorkflow:
                 approved_text=sanitized_text,
                 page_count=approved_doc.extraction.pages_processed,
             )
-            timings.append(StageTiming(stage_name="clinical_extraction", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(
+                    stage_name="clinical_extraction", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)
+                )
+            )
 
             state = self._transition(state, WorkflowState.EXTRACTED, history)
 
@@ -163,11 +174,13 @@ class ClinicalAnalysisWorkflow:
                 else:
                     warnings.append(f"Extraction audit warning: {finding.description}")
 
-            timings.append(StageTiming(stage_name="extraction_audit", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(stage_name="extraction_audit", duration_ms=round((time.perf_counter() - t_start) * 1000, 2))
+            )
 
             # 6. Patient-Friendly Explanation Generation
             t_start = time.perf_counter()
-            citations: List[Citation] = []
+            citations: list[Citation] = []
             for idx, obs in enumerate(extracted_data.observations[:10], start=1):
                 citations.append(
                     Citation(
@@ -191,7 +204,11 @@ class ClinicalAnalysisWorkflow:
                 response_model=GroundedExplanation,
                 system_prompt=prompt_registry.get_prompt("D_PATIENT_EXPLANATION").system_prompt,
             )
-            timings.append(StageTiming(stage_name="explanation_generation", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(
+                    stage_name="explanation_generation", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)
+                )
+            )
 
             # 7. Explanation Audit
             t_start = time.perf_counter()
@@ -201,7 +218,11 @@ class ClinicalAnalysisWorkflow:
                     errors.append(f"Explanation audit critical: {finding.description}")
                 else:
                     warnings.append(f"Explanation audit warning: {finding.description}")
-            timings.append(StageTiming(stage_name="explanation_audit", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)))
+            timings.append(
+                StageTiming(
+                    stage_name="explanation_audit", duration_ms=round((time.perf_counter() - t_start) * 1000, 2)
+                )
+            )
 
             # Final status evaluation
             if errors:
@@ -210,7 +231,7 @@ class ClinicalAnalysisWorkflow:
                 final_state = self._transition(state, WorkflowState.APPROVED, history)
 
             result = WorkflowResult(
-                workflow_id=f"wf-{int(time.time()*1000)}",
+                workflow_id=f"wf-{int(time.time() * 1000)}",
                 document_id=document_id,
                 tenant_id=tenant_id,
                 status=final_state,
@@ -247,7 +268,7 @@ class ClinicalAnalysisWorkflow:
                 state = WorkflowState.FAILED
 
             return WorkflowResult(
-                workflow_id=f"wf-{int(time.time()*1000)}",
+                workflow_id=f"wf-{int(time.time() * 1000)}",
                 document_id=document_id,
                 tenant_id=tenant_id,
                 status=state,

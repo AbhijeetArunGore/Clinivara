@@ -4,8 +4,6 @@ End-to-end integration tests for complete clinical document processing pipelines
 - Scanned raster image intake with Tesseract OCR fallback.
 """
 
-from fastapi.testclient import TestClient
-
 
 def test_e2e_digital_pdf_pipeline(client, auth_headers, synthetic_pdf_bytes):
     # 1. Upload digital PDF
@@ -52,6 +50,7 @@ def test_e2e_digital_pdf_pipeline(client, auth_headers, synthetic_pdf_bytes):
     # Verify structured clinical sections parsed
     sections = result_data["clinical_content"]["sections"]
     section_titles = [s["title"] for s in sections]
+    assert len(section_titles) >= 1
     assert any("diabetes" in s["content"].lower() or "metformin" in s["content"].lower() for s in sections)
 
     # 4. Delete document

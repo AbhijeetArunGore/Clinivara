@@ -5,7 +5,7 @@ Parses multi-column rows, key-value laboratory measurements, and reference inter
 
 import re
 import uuid
-from typing import List, Optional, Tuple
+
 from clinivara.clinical.terminology.loinc_adapter import loinc_adapter
 from clinivara.clinical.unit_validator import unit_validator
 from clinivara.schemas.ai import ClinicalObservation, ReferenceRange
@@ -27,7 +27,7 @@ class LabTableExtractor:
     """Extracts structured laboratory observations with exact evidence anchors."""
 
     @staticmethod
-    def _parse_reference_range(ref_str: Optional[str]) -> Optional[ReferenceRange]:
+    def _parse_reference_range(ref_str: str | None) -> ReferenceRange | None:
         if not ref_str:
             return None
         cleaned = ref_str.strip()
@@ -52,14 +52,14 @@ class LabTableExtractor:
         return ReferenceRange(raw_text=cleaned)
 
     @classmethod
-    def extract_observations(cls, text: str, page_number: int = 1) -> List[ClinicalObservation]:
+    def extract_observations(cls, text: str, page_number: int = 1) -> list[ClinicalObservation]:
         """
         Parses text for laboratory measurements, test names, units, and reference ranges.
         """
         if not text:
             return []
 
-        observations: List[ClinicalObservation] = []
+        observations: list[ClinicalObservation] = []
         lines = text.splitlines()
 
         for line in lines:
@@ -68,7 +68,20 @@ class LabTableExtractor:
                 continue
 
             # Skip clear headers/metadata lines that don't represent tests
-            if any(h in line_str.lower() for h in ["patient name:", "doctor:", "date of", "phone:", "mrn:", "test name", "reference interval", "date:", "specimen:"]):
+            if any(
+                h in line_str.lower()
+                for h in [
+                    "patient name:",
+                    "doctor:",
+                    "date of",
+                    "phone:",
+                    "mrn:",
+                    "test name",
+                    "reference interval",
+                    "date:",
+                    "specimen:",
+                ]
+            ):
                 continue
 
             raw_test_name = None
@@ -95,7 +108,11 @@ class LabTableExtractor:
                 raw_ref_str = match.group(4).strip() if match.group(4) else None
 
             # Skip if test name is generic punctuation or too short
-            if not raw_test_name or len(raw_test_name) < 2 or raw_test_name.lower() in ("test", "investigation", "parameter"):
+            if (
+                not raw_test_name
+                or len(raw_test_name) < 2
+                or raw_test_name.lower() in ("test", "investigation", "parameter")
+            ):
                 continue
 
             # Parse comparator and numeric value
@@ -134,9 +151,7 @@ class LabTableExtractor:
             # Evaluate derived status
             ref_low = ref_range.low if ref_range else None
             ref_high = ref_range.high if ref_range else None
-            derived_status, is_abnormal = unit_validator.evaluate_derived_status(
-                numeric_val, ref_low, ref_high
-            )
+            derived_status, is_abnormal = unit_validator.evaluate_derived_status(numeric_val, ref_low, ref_high)
 
             obs = ClinicalObservation(
                 observation_id=f"obs_{uuid.uuid4().hex[:8]}",

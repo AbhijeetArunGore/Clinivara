@@ -3,15 +3,13 @@ Pytest configuration, fixtures, and synthetic document generators.
 """
 
 import io
-import pytest
-from pathlib import Path
-from PIL import Image, ImageDraw
-import fitz  # PyMuPDF
-from fastapi.testclient import TestClient
 
-from clinivara.core.config import settings
+import pymupdf as fitz
+import pytest
+from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw
+
 from clinivara.main import app
-from clinivara.storage.storage_manager import StorageManager
 
 
 @pytest.fixture

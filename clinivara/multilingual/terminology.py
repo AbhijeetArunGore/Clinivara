@@ -3,12 +3,12 @@ Multilingual Clinical Terminology and Layperson Translation Dictionary.
 Supports English, Hindi, and Marathi clinical concepts.
 """
 
-from typing import Dict, List, Optional
 from pydantic import BaseModel, ConfigDict
 
 
 class MultilingualTerm(BaseModel):
     """Bilingual/multilingual clinical concept representation."""
+
     model_config = ConfigDict(frozen=True)
 
     concept_id: str
@@ -21,7 +21,7 @@ class MultilingualTerm(BaseModel):
 
 
 # Baseline curated dictionary for clinical lab reports and diagnoses
-CLINICAL_TERMINOLOGY_MAP: Dict[str, MultilingualTerm] = {
+CLINICAL_TERMINOLOGY_MAP: dict[str, MultilingualTerm] = {
     "diabetes": MultilingualTerm(
         concept_id="CONCEPT_DIABETES",
         canonical_english="Type 2 Diabetes Mellitus",
@@ -119,7 +119,7 @@ class ClinicalTerminologyService:
     """Provides multilingual mapping and explanations for clinical findings."""
 
     @staticmethod
-    def get_term(concept_key: str) -> Optional[MultilingualTerm]:
+    def get_term(concept_key: str) -> MultilingualTerm | None:
         return CLINICAL_TERMINOLOGY_MAP.get(concept_key.lower().strip())
 
     @staticmethod
@@ -134,7 +134,7 @@ class ClinicalTerminologyService:
         return term.canonical_english
 
     @staticmethod
-    def explain_concept(concept_key: str, target_language: str) -> Optional[str]:
+    def explain_concept(concept_key: str, target_language: str) -> str | None:
         term = CLINICAL_TERMINOLOGY_MAP.get(concept_key.lower().strip())
         if not term:
             return None

@@ -2,8 +2,9 @@
 Structured, privacy-preserving audit schemas.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, Literal, Optional
+from datetime import UTC, datetime
+from typing import Any, Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -12,12 +13,13 @@ class AuditEvent(BaseModel):
     Immutable structured audit event.
     Guaranteed not to contain sensitive personal identifiers or raw clinical text.
     """
+
     model_config = ConfigDict(frozen=True)
 
     event_id: str
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     tenant_id: str
-    document_id: Optional[str] = None
+    document_id: str | None = None
     correlation_id: str
     event_type: Literal[
         "DOCUMENT_UPLOADED",
@@ -35,4 +37,4 @@ class AuditEvent(BaseModel):
         "SECURITY_ALERT",
     ]
     status: Literal["SUCCESS", "FAILURE", "WARNING"]
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)

@@ -3,7 +3,8 @@ Clinical Document Chunker preserving table rows, units, reference intervals, and
 Never slices mid-number, mid-unit, or separates lab parameters from reference intervals.
 """
 
-from typing import List, Literal, Optional
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from clinivara.nlp.preprocessing import MultilingualClinicalPreprocessor
@@ -12,13 +13,14 @@ from clinivara.nlp.section_detection import ClinicalSectionDetector
 
 class DocumentChunk(BaseModel):
     """Atomic evidence chunk with provenance metadata."""
+
     model_config = ConfigDict(frozen=True)
 
     chunk_id: str
     document_id: str
     tenant_id: str
     page_number: int = Field(ge=1, default=1)
-    section_name: Optional[str] = None
+    section_name: str | None = None
     chunk_type: Literal["SECTION_TEXT", "TABLE_ROW", "SUMMARY_STATEMENT"] = "SECTION_TEXT"
     text: str
     token_count_approx: int = Field(ge=1)
@@ -37,11 +39,11 @@ class ClinicalDocumentChunker:
         tenant_id: str,
         text: str,
         page_number: int = 1,
-    ) -> List[DocumentChunk]:
+    ) -> list[DocumentChunk]:
         """
         Split approved clinical text into bounded evidence chunks.
         """
-        chunks: List[DocumentChunk] = []
+        chunks: list[DocumentChunk] = []
         if not text or not text.strip():
             return chunks
 
@@ -56,7 +58,6 @@ class ClinicalDocumentChunker:
                 continue
 
             lines = content.splitlines()
-            table_row_buffer = []
 
             for line in lines:
                 line_str = line.strip()
@@ -64,9 +65,8 @@ class ClinicalDocumentChunker:
                     continue
 
                 # Check if line resembles a tabular observation (has number or colon)
-                is_table_like = (
-                    any(char.isdigit() for char in line_str)
-                    and any(delim in line_str for delim in [":", "\t", "  ", "|", "-", "—"])
+                is_table_like = any(char.isdigit() for char in line_str) and any(
+                    delim in line_str for delim in [":", "\t", "  ", "|", "-", "—"]
                 )
 
                 if is_table_like:

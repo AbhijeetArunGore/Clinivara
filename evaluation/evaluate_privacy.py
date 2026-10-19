@@ -11,7 +11,8 @@ Measures:
 """
 
 import time
-from typing import Any, Dict, List
+from typing import Any
+
 from clinivara.deidentification.engine import deidentification_engine
 from clinivara.extraction.models import ExtractionResult, PageExtraction
 from clinivara.normalization.text_cleaner import text_cleaner
@@ -70,7 +71,13 @@ BENCHMARK_DATASET = [
             ("sunita.rao@hospital.org", "EMAIL_ADDRESS"),
             ("22-Feb-2024", "DATE_TIME"),
         ],
-        "must_preserve_clinical": ["Essential Hypertension", "142/90 mmHg", "240 mg/dL", "Amlodipine 5 mg", "Atorvastatin 20 mg"],
+        "must_preserve_clinical": [
+            "Essential Hypertension",
+            "142/90 mmHg",
+            "240 mg/dL",
+            "Amlodipine 5 mg",
+            "Atorvastatin 20 mg",
+        ],
     },
     {
         "id": "synthetic_eval_03",
@@ -99,7 +106,7 @@ BENCHMARK_DATASET = [
 ]
 
 
-def run_benchmark() -> Dict[str, Any]:
+def run_benchmark() -> dict[str, Any]:
     """Execute evaluation over the benchmark dataset and compute metrics."""
     total_ground_truth = 0
     total_true_positives = 0
@@ -136,13 +143,15 @@ def run_benchmark() -> Dict[str, Any]:
             document_id=case["id"],
             tenant_id="benchmark_tenant",
             correlation_id=f"eval_{case['id']}",
-            pages=[PageExtraction(
-                page_number=1,
-                method="DIGITAL_TEXT",
-                text=raw_text,
-                character_count=len(raw_text),
-                word_count=len(raw_text.split()),
-            )],
+            pages=[
+                PageExtraction(
+                    page_number=1,
+                    method="DIGITAL_TEXT",
+                    text=raw_text,
+                    character_count=len(raw_text),
+                    word_count=len(raw_text.split()),
+                )
+            ],
             methods_used=["digital_text"],
             total_pages=1,
             status="COMPLETED",
@@ -185,10 +194,16 @@ def run_benchmark() -> Dict[str, Any]:
         residuals, _ = residual_scanner.scan_for_residuals(deid_text)
         total_residual_after_gate += residuals
 
-        print(f"Report: {case['id']:<20} | Decision: {decision:<8} | TP: {case_tp}/{len(gt_entities)} | Residuals: {residuals} | Latency: {latency:.1f}ms")
+        print(
+            f"Report: {case['id']:<20} | Decision: {decision:<8} | TP: {case_tp}/{len(gt_entities)} | Residuals: {residuals} | Latency: {latency:.1f}ms"
+        )
 
     # Metrics calculation
-    precision = total_true_positives / (total_true_positives + total_false_positives) if (total_true_positives + total_false_positives) > 0 else 1.0
+    precision = (
+        total_true_positives / (total_true_positives + total_false_positives)
+        if (total_true_positives + total_false_positives) > 0
+        else 1.0
+    )
     recall = total_true_positives / total_ground_truth if total_ground_truth > 0 else 1.0
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
     preservation_rate = (clinical_preserved_count / total_clinical_facts) * 100.0 if total_clinical_facts > 0 else 100.0

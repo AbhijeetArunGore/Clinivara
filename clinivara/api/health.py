@@ -3,6 +3,7 @@ Health check endpoints for container readiness and operational monitoring.
 """
 
 from fastapi import APIRouter
+
 from clinivara.core.config import settings
 
 health_router = APIRouter(prefix="/health", tags=["Health"])

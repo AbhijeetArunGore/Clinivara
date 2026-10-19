@@ -3,19 +3,21 @@ Multilingual language and script detector for English, Hindi, and Marathi clinic
 """
 
 import re
-from typing import Dict, List, Literal, Tuple
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class LanguageDetectionResult(BaseModel):
     """Result of language and script identification."""
+
     model_config = ConfigDict(frozen=True)
 
     primary_language: Literal["en", "hi", "mr", "unknown"]
     confidence: float = Field(ge=0.0, le=1.0)
-    secondary_languages: List[str] = Field(default_factory=list)
+    secondary_languages: list[str] = Field(default_factory=list)
     is_mixed_script: bool = False
-    script_distribution: Dict[str, float] = Field(default_factory=dict)
+    script_distribution: dict[str, float] = Field(default_factory=dict)
     detection_method: str = "SCRIPT_AND_LEXICAL_HEURISTICS"
     is_uncertain: bool = False
 
@@ -26,13 +28,43 @@ class LanguageDetectionResult(BaseModel):
 
 # Lexical markers for disambiguating Devanagari text
 MARATHI_MARKERS = {
-    "आहे", "नाही", "रुग्ण", "तपासणी", "दिनांक", "रक्त", "वय", "निष्कर्ष",
-    "उपचार", "तक्रार", "केले", "होते", "येथे", "नाव", "तसेच", "औषध", "लक्षणे"
+    "आहे",
+    "नाही",
+    "रुग्ण",
+    "तपासणी",
+    "दिनांक",
+    "रक्त",
+    "वय",
+    "निष्कर्ष",
+    "उपचार",
+    "तक्रार",
+    "केले",
+    "होते",
+    "येथे",
+    "नाव",
+    "तसेच",
+    "औषध",
+    "लक्षणे",
 }
 
 HINDI_MARKERS = {
-    "है", "नहीं", "मरीज", "जांच", "दिनांक", "रक्त", "उम्र", "उपचार",
-    "समस्या", "था", "थी", "किया", "गया", "नाम", "दवा", "लक्षण", "कृपया"
+    "है",
+    "नहीं",
+    "मरीज",
+    "जांच",
+    "दिनांक",
+    "रक्त",
+    "उम्र",
+    "उपचार",
+    "समस्या",
+    "था",
+    "थी",
+    "किया",
+    "गया",
+    "नाम",
+    "दवा",
+    "लक्षण",
+    "कृपया",
 }
 
 

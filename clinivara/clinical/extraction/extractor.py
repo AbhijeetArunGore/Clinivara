@@ -4,7 +4,7 @@ Extracts observations, diagnoses, symptoms, and medications with negation and te
 """
 
 import re
-from typing import List, Tuple
+
 from clinivara.clinical.document_classifier import document_classifier
 from clinivara.clinical.table_extractor import lab_table_extractor
 from clinivara.nlp.negation import clinical_negation_detector
@@ -76,15 +76,15 @@ class ClinicalExtractor:
         classification = document_classifier.classify(text)
 
         # 2. Section detection
-        sections = section_detector.detect_sections(text)
+        _ = section_detector.detect_sections(text)
 
         # 3. Extract laboratory observations
         observations = lab_table_extractor.extract_observations(text)
 
         # 4. Extract clinical entities with negation and temporality
         sentences = clinical_preprocessor.split_sentences(text)
-        entities: List[ClinicalEntity] = []
-        medications: List[MedicationEntity] = []
+        entities: list[ClinicalEntity] = []
+        medications: list[MedicationEntity] = []
 
         for sent in sentences:
             is_neg, is_unc, temp, trigger = clinical_negation_detector.analyze_assertion(sent)

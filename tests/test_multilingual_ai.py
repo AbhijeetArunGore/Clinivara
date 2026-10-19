@@ -7,11 +7,8 @@ Automated unit and integration tests for multilingual processing:
 - Language registry capability reporting.
 """
 
-import pytest
-
 from clinivara.multilingual.language_detection import LanguageDetector
 from clinivara.multilingual.language_registry import LanguageRegistry
-from clinivara.multilingual.terminology import ClinicalTerminologyTrilingual
 from clinivara.multilingual.translation import MultilingualTranslator
 from clinivara.multilingual.unicode_normalizer import DevanagariUnicodeNormalizer
 
@@ -64,7 +61,7 @@ def test_devanagari_unicode_normalizer_matra_and_indic_digits():
     # 'क ा' has an OCR space between consonant and matra; '८.४' is Indic digits
     raw = "रक्त तपासणी: हीमोग्लोबिन ८.४ g/dL क ा निष्कर्ष।"
     normalized = normalizer.normalize(raw)
-    
+
     # Matra merged
     assert "का" in normalized
     # Indic digits translated to standard Arabic digits
@@ -84,7 +81,7 @@ def test_clinical_translation_preserves_medication_and_numbers():
     translator = MultilingualTranslator()
     text = "Patient is prescribed Metformin 500 mg PO BID. Blood pressure is 130/80 mmHg."
     res = translator.translate(text, source_language="en", target_language="hi")
-    
+
     assert res.target_language == "hi"
     # Clinical units and medications must not be mangled
     assert "Metformin" in res.translated_text
@@ -97,7 +94,7 @@ def test_clinical_translation_marathi():
     translator = MultilingualTranslator()
     text = "Fasting glucose is 95 mg/dL which is normal."
     res = translator.translate(text, source_language="en", target_language="mr")
-    
+
     assert res.target_language == "mr"
     assert "95 mg/dL" in res.translated_text
     assert "सामान्य" in res.translated_text
@@ -109,7 +106,7 @@ def test_language_registry_supported_languages():
     assert registry.is_supported("hi")
     assert registry.is_supported("mr")
     assert not registry.is_supported("fr")
-    
+
     hi_meta = registry.get("hi")
     assert hi_meta is not None
     assert hi_meta.script == "Devanagari"

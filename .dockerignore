@@ -1,0 +1,53 @@
+# =====================================================================
+# Clinivara Docker Build Ignore Manifest
+# Prevents sensitive files, local data, virtual environments, and secrets
+# from leaking into container images and build layers.
+# =====================================================================
+
+# Version control and IDE artifacts
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets and local environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+
+# Storage vaults and runtime clinical data (CRITICAL PRIVACY SAFEGUARD)
+data/
+data/storage/
+data/audit/
+*.jsonl
+*.pdf
+*.png
+*.jpg
+*.jpeg
+
+# Python build artifacts and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Testing and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+tests/

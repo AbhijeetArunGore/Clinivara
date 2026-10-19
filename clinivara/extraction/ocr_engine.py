@@ -4,7 +4,8 @@ and quality metric extraction.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
+
 from PIL import Image
 
 from clinivara.core.config import settings
@@ -18,7 +19,7 @@ class OCREngine:
         self.language = settings.ocr_default_language
         self.timeout = settings.ocr_timeout_seconds
 
-    def extract_from_image_path(self, image_path: Path) -> Tuple[str, Optional[float], Dict[str, Any]]:
+    def extract_from_image_path(self, image_path: Path) -> tuple[str, float | None, dict[str, Any]]:
         """
         Run OCR on an image file.
         Returns:
@@ -48,10 +49,7 @@ class OCREngine:
                 )
 
                 # Calculate true mean confidence across detected word tokens (ignoring empty or -1)
-                confidences = [
-                    int(c) for c in data.get("conf", [])
-                    if str(c).isdigit() and int(c) >= 0
-                ]
+                confidences = [int(c) for c in data.get("conf", []) if str(c).isdigit() and int(c) >= 0]
 
                 avg_conf = None
                 if confidences:

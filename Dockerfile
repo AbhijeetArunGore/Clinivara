@@ -10,6 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-eng \
+    tesseract-ocr-hin \
+    tesseract-ocr-mar \
     libmupdf-dev \
     curl \
     ca-certificates \
@@ -21,32 +23,17 @@ RUN groupadd -r clinivara --gid 1001 && \
 
 WORKDIR /app
 
-# Copy dependency manifest
-COPY pyproject.toml .
+# Copy project manifests and source code
+COPY pyproject.toml README.md ./
+COPY clinivara/ ./clinivara/
+COPY evaluation/ ./evaluation/
 
-# Install Python dependencies using pip
+# Install Python dependencies using pip directly from manifest
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    fastapi \
-    "uvicorn[standard]" \
-    pydantic \
-    pydantic-settings \
-    pymupdf \
-    pytesseract \
-    pillow \
-    presidio-analyzer \
-    presidio-anonymizer \
-    spacy \
-    cryptography \
-    python-multipart \
-    httpx
+    pip install --no-cache-dir .
 
 # Pre-download spaCy English model for fast offline startup
 RUN python -m spacy download en_core_web_sm
-
-# Copy application source code
-COPY clinivara/ ./clinivara/
-COPY evaluation/ ./evaluation/
 
 # Create segregated storage directories with restricted ownership
 RUN mkdir -p /app/data/storage/boundary_a_raw \

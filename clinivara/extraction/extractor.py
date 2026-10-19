@@ -3,7 +3,6 @@ Document extraction orchestrator: selective OCR fallback and provenance tracking
 """
 
 from pathlib import Path
-from typing import List
 
 from clinivara.audit.audit_logger import audit_logger
 from clinivara.core.config import settings
@@ -25,7 +24,7 @@ class DocumentExtractor:
         file_path: Path,
     ) -> ExtractionResult:
         scratch_dir = storage_manager.get_scratch_dir(tenant_id, document_id)
-        pages: List[PageExtraction] = []
+        pages: list[PageExtraction] = []
         methods_used = set()
         warnings = []
 

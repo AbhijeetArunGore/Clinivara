@@ -11,7 +11,7 @@ Independent multi-layer checks:
 
 import io
 from pathlib import Path
-from typing import Tuple
+
 from PIL import Image
 
 from clinivara.core.config import settings
@@ -47,7 +47,7 @@ def detect_file_signature(data: bytes) -> str:
     raise InvalidDocumentError("Unsupported or spoofed file format. File signature mismatch.")
 
 
-def validate_file_size_and_signature(content: bytes) -> Tuple[str, str]:
+def validate_file_size_and_signature(content: bytes) -> tuple[str, str]:
     """
     Validate size and magic bytes against configured allowed types.
     Returns (format_name, canonical_extension).
@@ -57,7 +57,7 @@ def validate_file_size_and_signature(content: bytes) -> Tuple[str, str]:
 
     if len(content) > settings.max_upload_size_bytes:
         raise DocumentTooLargeError(
-            f"Uploaded document exceeds maximum size of {settings.max_upload_size_bytes // (1024*1024)} MB."
+            f"Uploaded document exceeds maximum size of {settings.max_upload_size_bytes // (1024 * 1024)} MB."
         )
 
     detected_format = detect_file_signature(content[:16])
@@ -106,11 +106,11 @@ def inspect_pdf_preliminary(file_path: Path) -> int:
     - Checks page count against configured maximum limit.
     Returns page count.
     """
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
 
     try:
         doc = fitz.open(file_path)
-    except Exception as e:
+    except Exception:
         raise InvalidDocumentError("Corrupted or malformed PDF file.")
 
     try:

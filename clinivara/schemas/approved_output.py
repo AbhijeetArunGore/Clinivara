@@ -3,12 +3,14 @@ Strict Pydantic models for approved clinical document outputs.
 Enforces the invariant that unapproved or unvalidated documents cannot be serialized.
 """
 
-from typing import List, Literal, Optional
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ClinicalSection(BaseModel):
     """Normalized clinical section preserving clinical context."""
+
     model_config = ConfigDict(frozen=True)
 
     title: str = Field(description="Normalized section heading (e.g. DIAGNOSIS, MEDICATIONS)")
@@ -17,16 +19,18 @@ class ClinicalSection(BaseModel):
 
 class ExtractionMetadata(BaseModel):
     """Safe extraction summary without disclosing raw text or sensitive paths."""
+
     model_config = ConfigDict(frozen=True)
 
     status: Literal["COMPLETED", "PARTIAL", "FAILED"]
     pages_processed: int = Field(ge=1)
-    methods_used: List[str] = Field(description="Extraction mechanisms used, e.g. digital_text, ocr")
-    warnings: List[str] = Field(default_factory=list)
+    methods_used: list[str] = Field(description="Extraction mechanisms used, e.g. digital_text, ocr")
+    warnings: list[str] = Field(default_factory=list)
 
 
 class DeidentificationMetadata(BaseModel):
     """Summary of privacy transformations applied."""
+
     model_config = ConfigDict(frozen=True)
 
     status: Literal["COMPLETED", "FAILED"]
@@ -40,6 +44,7 @@ class DeidentificationMetadata(BaseModel):
 
 class QualityMetadata(BaseModel):
     """Quality and preservation verification flags."""
+
     model_config = ConfigDict(frozen=True)
 
     schema_valid: bool = True
@@ -49,10 +54,11 @@ class QualityMetadata(BaseModel):
 
 class ClinicalContent(BaseModel):
     """De-identified clinical text and structured sections."""
+
     model_config = ConfigDict(frozen=True)
 
     text: str = Field(description="Fully sanitized, de-identified clinical text")
-    sections: List[ClinicalSection] = Field(default_factory=list)
+    sections: list[ClinicalSection] = Field(default_factory=list)
 
 
 class ApprovedDocumentOutput(BaseModel):
@@ -60,6 +66,7 @@ class ApprovedDocumentOutput(BaseModel):
     Downstream consumption contract.
     Only policy-approved, independently verified documents may be exported.
     """
+
     model_config = ConfigDict(frozen=True)
 
     schema_version: str = Field(default="1.0")

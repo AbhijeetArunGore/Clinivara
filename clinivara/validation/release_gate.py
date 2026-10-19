@@ -6,7 +6,8 @@ Only documents with 0 residual identifiers, verified clinical preservation,
 and complete Pydantic contract validation may achieve APPROVED status.
 """
 
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Literal
+
 from clinivara.audit.audit_logger import audit_logger
 from clinivara.core.config import settings
 from clinivara.extraction.models import ExtractionResult
@@ -34,14 +35,14 @@ class ReleaseGate:
         raw_text: str,
         deidentified_text: str,
         extraction_result: ExtractionResult,
-        transformed_counts: Dict[str, int],
-    ) -> Tuple[Literal["APPROVED", "REJECTED", "REVIEW_REQUIRED"], List[str], Dict[str, Any]]:
+        transformed_counts: dict[str, int],
+    ) -> tuple[Literal["APPROVED", "REJECTED", "REVIEW_REQUIRED"], list[str], dict[str, Any]]:
         """
         Evaluate de-identified text against independent second-pass checks and schema constraints.
         Returns:
             (decision_status, warnings_list, metrics_dict)
         """
-        warnings: List[str] = []
+        warnings: list[str] = []
 
         try:
             # 1. Independent Second-Pass Residual Scanner
@@ -49,9 +50,7 @@ class ReleaseGate:
             warnings.extend(residual_warnings)
 
             # 2. Clinical Preservation Check
-            preserved, preservation_warnings = preservation_checker.check_preservation(
-                raw_text, deidentified_text
-            )
+            preserved, preservation_warnings = preservation_checker.check_preservation(raw_text, deidentified_text)
             warnings.extend(preservation_warnings)
 
             # 3. Parse Clinical Sections
@@ -103,18 +102,22 @@ class ReleaseGate:
 
             # 6. Update Document Metadata
             meta = storage_manager.get_document_metadata(tenant_id, document_id) or {}
-            meta.update({
-                "status": decision,
-                "stage": f"RELEASE_DECISION_{decision}",
-                "residual_count": residual_count,
-                "clinical_preserved": preserved,
-                "warnings": warnings,
-            })
+            meta.update(
+                {
+                    "status": decision,
+                    "stage": f"RELEASE_DECISION_{decision}",
+                    "residual_count": residual_count,
+                    "clinical_preserved": preserved,
+                    "warnings": warnings,
+                }
+            )
             storage_manager.save_document_metadata(tenant_id, document_id, meta)
 
             # 7. Audit Event
-            event_type = "RELEASE_APPROVED" if decision == "APPROVED" else (
-                "RELEASE_REJECTED" if decision == "REJECTED" else "RELEASE_REVIEW_REQUIRED"
+            event_type = (
+                "RELEASE_APPROVED"
+                if decision == "APPROVED"
+                else ("RELEASE_REJECTED" if decision == "REJECTED" else "RELEASE_REVIEW_REQUIRED")
             )
             audit_logger.record_event(
                 tenant_id=tenant_id,
@@ -143,11 +146,13 @@ class ReleaseGate:
             decision = "REJECTED"
             warnings.append(f"Validation system exception: {type(e).__name__}")
             meta = storage_manager.get_document_metadata(tenant_id, document_id) or {}
-            meta.update({
-                "status": "REJECTED",
-                "stage": "VALIDATION_EXCEPTION",
-                "warnings": warnings,
-            })
+            meta.update(
+                {
+                    "status": "REJECTED",
+                    "stage": "VALIDATION_EXCEPTION",
+                    "warnings": warnings,
+                }
+            )
             storage_manager.save_document_metadata(tenant_id, document_id, meta)
 
             audit_logger.record_event(

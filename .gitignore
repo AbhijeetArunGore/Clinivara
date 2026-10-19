@@ -45,9 +45,19 @@ htmlcov/
 
 # Environment and secrets
 .env
-.env.local
+.env.*
+!.env.example
 *.pem
 *.key
+*.cert
+*.crt
+*.log
+*.sqlite
+*.db
+
+# Ruff & Linter Cache
+.ruff_cache/
+.mypy_cache/
 
 # IDE & Editor artifacts
 .vscode/

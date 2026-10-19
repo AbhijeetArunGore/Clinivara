@@ -7,10 +7,7 @@ Automated unit and integration tests for clinical fact extraction:
 - Negation and temporality preservation.
 """
 
-import pytest
-
 from clinivara.clinical.document_classifier import ClinicalDocumentClassifier
-from clinivara.clinical.extraction.extractor import ClinicalExtractor
 from clinivara.clinical.table_extractor import LabTableExtractor
 from clinivara.clinical.terminology.loinc_adapter import LOINCAdapter
 from clinivara.clinical.unit_validator import UnitValidator
@@ -108,7 +105,7 @@ def test_unit_validator_standardization_and_evaluation():
 
 def test_negation_and_uncertainty_detector():
     detector = ClinicalNegationDetector()
-    
+
     # English negation
     neg_en = detector.analyze_assertion("Patient has no evidence of acute chest pain or fever.")
     assert neg_en.is_negated

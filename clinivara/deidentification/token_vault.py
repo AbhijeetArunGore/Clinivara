@@ -8,12 +8,9 @@ Enforces:
 """
 
 import json
-from pathlib import Path
-from typing import Dict, Optional
 
 from clinivara.core.config import settings
 from clinivara.core.security import generate_pseudonym_token
-from clinivara.storage.storage_manager import storage_manager
 
 
 class TokenVault:
@@ -43,7 +40,7 @@ class TokenVault:
             mapping = {}
             if mapping_file.exists():
                 try:
-                    with open(mapping_file, "r", encoding="utf-8") as f:
+                    with open(mapping_file, encoding="utf-8") as f:
                         mapping = json.load(f)
                 except Exception:
                     mapping = {}

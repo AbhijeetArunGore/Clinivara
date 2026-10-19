@@ -2,9 +2,6 @@
 Unit tests for text extraction, selective OCR fallback, and provenance tracking.
 """
 
-from pathlib import Path
-import fitz
-
 from clinivara.extraction.extractor import document_extractor
 from clinivara.storage.storage_manager import storage_manager
 

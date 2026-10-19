@@ -4,14 +4,15 @@ Supports English, Hindi, and Marathi clinical context without clinical corruptio
 """
 
 import re
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 
 class AssertionAnalysis(NamedTuple):
     is_negated: bool
     is_uncertain: bool
     temporality: str
-    matched_trigger: Optional[str] = None
+    matched_trigger: str | None = None
+
 
 # Pre-compiled contextual triggers across English, Hindi, and Marathi
 NEGATION_PATTERNS = [
@@ -51,7 +52,7 @@ class ClinicalNegationDetector:
     """Detects negated findings, diagnostic uncertainty, and temporal context."""
 
     @staticmethod
-    def analyze_assertion(sentence: str) -> Tuple[bool, bool, str, Optional[str]]:
+    def analyze_assertion(sentence: str) -> tuple[bool, bool, str, str | None]:
         """
         Analyzes a sentence or clinical phrase for negation, uncertainty, and temporality.
         Returns:

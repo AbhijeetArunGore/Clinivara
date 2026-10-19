@@ -6,7 +6,6 @@ unredacted names, phone numbers, emails, government IDs, or raw tokens.
 """
 
 import re
-from typing import List, Tuple
 
 # Independent secondary residual regex patterns
 RESIDUAL_PATTERNS = [
@@ -21,10 +20,22 @@ RESIDUAL_PATTERNS = [
     # Residual Hospital MRN / UHID
     (re.compile(r"(?<!\[)\b(?:MRN|UHID|PID|HSP)[-:\s#]{1,3}[A-Z0-9\-/]{4,16}\b(?!\])", re.IGNORECASE), "RESIDUAL_MRN"),
     # Unredacted Patient / Doctor Name indicator
-    (re.compile(r"\b(?:Patient(?:\s+Name)?|Pt(?:\s+Name)?)[ \t]*:[ \t]*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b", re.IGNORECASE), "UNREDACTED_PATIENT_NAME"),
-    (re.compile(r"\b(?:Dr\.|Dr|Doctor)[ \t]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b", re.IGNORECASE), "UNREDACTED_DOCTOR_NAME"),
+    (
+        re.compile(
+            r"\b(?:Patient(?:\s+Name)?|Pt(?:\s+Name)?)[ \t]*:[ \t]*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b",
+            re.IGNORECASE,
+        ),
+        "UNREDACTED_PATIENT_NAME",
+    ),
+    (
+        re.compile(r"\b(?:Dr\.|Dr|Doctor)[ \t]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})\b", re.IGNORECASE),
+        "UNREDACTED_DOCTOR_NAME",
+    ),
     # Leaked internal storage paths
-    (re.compile(r"(?:[A-Za-z]:\\(?:Users|Data|Clinivara)|/(?:home|var|tmp|data)/clinivara)", re.IGNORECASE), "INTERNAL_PATH_LEAK"),
+    (
+        re.compile(r"(?:[A-Za-z]:\\(?:Users|Data|Clinivara)|/(?:home|var|tmp|data)/clinivara)", re.IGNORECASE),
+        "INTERNAL_PATH_LEAK",
+    ),
 ]
 
 
@@ -32,7 +43,7 @@ class ResidualIdentifierScanner:
     """Independent second-pass scanner evaluating de-identified text for residual identifiers."""
 
     @staticmethod
-    def scan_for_residuals(text: str) -> Tuple[int, List[str]]:
+    def scan_for_residuals(text: str) -> tuple[int, list[str]]:
         """
         Scan de-identified text for any residual unredacted identifiers.
         Returns:

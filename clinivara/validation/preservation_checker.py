@@ -7,7 +7,6 @@ and uncorrupted in the de-identified text.
 """
 
 import re
-from typing import List, Tuple
 
 
 class ClinicalPreservationChecker:
@@ -17,7 +16,7 @@ class ClinicalPreservationChecker:
     def check_preservation(
         original_text: str,
         deidentified_text: str,
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         Evaluates preservation of critical clinical information.
         Returns:
@@ -37,7 +36,9 @@ class ClinicalPreservationChecker:
                 warnings.append(f"Clinical laboratory metric '{metric}' appears missing in de-identified output.")
 
         # 2. Check preservation of true blood pressure patterns (e.g. 120/80, 135/85), excluding dates (e.g. 12/04/1982)
-        bp_pattern = re.compile(r"\b(?:[7-9]\d|1\d\d|2[0-1]\d)/(?:[4-9]\d|1[0-2]\d)(?!\s*/\s*\d{2,4})\s*(?:mmHg)?\b", re.IGNORECASE)
+        bp_pattern = re.compile(
+            r"\b(?:[7-9]\d|1\d\d|2[0-1]\d)/(?:[4-9]\d|1[0-2]\d)(?!\s*/\s*\d{2,4})\s*(?:mmHg)?\b", re.IGNORECASE
+        )
         orig_bps = set(b.group(0).lower() for b in bp_pattern.finditer(original_text))
         for bp in orig_bps:
             if bp not in deidentified_text.lower():

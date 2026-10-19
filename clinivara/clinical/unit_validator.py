@@ -2,9 +2,6 @@
 Clinical unit validator and standard UCUM representation adapter.
 """
 
-import re
-from typing import Optional, Tuple
-
 VALID_CLINICAL_UNITS = {
     "mg/dl": "mg/dL",
     "mmol/l": "mmol/L",
@@ -28,7 +25,7 @@ class UnitValidator:
     """Validates and standardizes clinical measurement units."""
 
     @staticmethod
-    def standardize_unit(raw_unit: Optional[str]) -> Optional[str]:
+    def standardize_unit(raw_unit: str | None) -> str | None:
         if not raw_unit:
             return None
         cleaned = raw_unit.strip().lower()
@@ -42,13 +39,13 @@ class UnitValidator:
 
     @staticmethod
     def evaluate_derived_status(
-        numeric_val: Optional[float] = None,
-        ref_low: Optional[float] = None,
-        ref_high: Optional[float] = None,
-        value: Optional[float] = None,
-        low: Optional[float] = None,
-        high: Optional[float] = None,
-    ) -> Tuple[str, bool]:
+        numeric_val: float | None = None,
+        ref_low: float | None = None,
+        ref_high: float | None = None,
+        value: float | None = None,
+        low: float | None = None,
+        high: float | None = None,
+    ) -> tuple[str, bool]:
         """
         Derives clinical status flag based on reported reference interval.
         Returns:

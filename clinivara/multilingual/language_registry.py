@@ -3,12 +3,13 @@ Pluggable Multilingual Language Registry for Indian Medical Documents.
 """
 
 import subprocess
-from typing import Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class LanguageInfo(BaseModel):
     """Metadata describing a supported or pluggable language."""
+
     model_config = ConfigDict(frozen=True)
 
     code: str = Field(description="ISO 639-1 / 639-2 language code (e.g. 'en', 'hi', 'mr')")
@@ -20,7 +21,7 @@ class LanguageInfo(BaseModel):
     extraction_supported: bool = True
     generation_supported: bool = True
     validation_status: str = "VALIDATED"
-    limitations: List[str] = Field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
 
 
 class LanguageRegistry:
@@ -28,7 +29,7 @@ class LanguageRegistry:
 
     def __init__(self):
         self._installed_ocr_packs = self._detect_installed_tesseract_languages()
-        self._languages: Dict[str, LanguageInfo] = {
+        self._languages: dict[str, LanguageInfo] = {
             "en": LanguageInfo(
                 code="en",
                 display_name="English",
@@ -63,7 +64,9 @@ class LanguageRegistry:
                 extraction_supported=True,
                 generation_supported=True,
                 validation_status="VALIDATED",
-                limitations=["Shares Devanagari script with Hindi; disambiguation relies on lexical and letter 'ळ' markers."],
+                limitations=[
+                    "Shares Devanagari script with Hindi; disambiguation relies on lexical and letter 'ळ' markers."
+                ],
             ),
             # Pluggable regional languages documented with explicit availability status
             "gu": LanguageInfo(
@@ -105,7 +108,7 @@ class LanguageRegistry:
         }
 
     @staticmethod
-    def _detect_installed_tesseract_languages() -> List[str]:
+    def _detect_installed_tesseract_languages() -> list[str]:
         """Detect which Tesseract language packs are physically installed on the host system."""
         try:
             res = subprocess.run(
@@ -123,31 +126,31 @@ class LanguageRegistry:
             pass
         return ["eng"]
 
-    def get_language(self, code: str) -> Optional[LanguageInfo]:
+    def get_language(self, code: str) -> LanguageInfo | None:
         return self._languages.get(code.lower().strip())
 
-    def get(self, code: str) -> Optional[LanguageInfo]:
+    def get(self, code: str) -> LanguageInfo | None:
         return self.get_language(code)
 
     def is_supported(self, code: str) -> bool:
         lang = self.get_language(code)
         return lang is not None and lang.generation_supported
 
-    def list_supported_languages(self) -> List[LanguageInfo]:
+    def list_supported_languages(self) -> list[LanguageInfo]:
         """Returns all fully implemented and supported languages (English, Hindi, Marathi)."""
         return [lang for lang in self._languages.values() if lang.generation_supported]
 
-    def get_supported_languages(self) -> List[str]:
+    def get_supported_languages(self) -> list[str]:
         return [lang.code for lang in self.list_supported_languages()]
 
-    def list_all_registered(self) -> List[LanguageInfo]:
+    def list_all_registered(self) -> list[LanguageInfo]:
         """Returns all registered languages including planned pluggable languages."""
         return list(self._languages.values())
 
-    def list_all(self) -> List[LanguageInfo]:
+    def list_all(self) -> list[LanguageInfo]:
         return self.list_all_registered()
 
-    def get_installed_ocr_packs(self) -> List[str]:
+    def get_installed_ocr_packs(self) -> list[str]:
         return list(self._installed_ocr_packs)
 
 

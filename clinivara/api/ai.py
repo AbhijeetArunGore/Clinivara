@@ -3,7 +3,8 @@ FastAPI Endpoints for Clinivara AI, Multilingual Understanding, Clinical Extract
 Operates exclusively on Boundary C approved document outputs.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
@@ -37,16 +38,16 @@ class ExplainRequest(BaseModel):
 
 
 # In-memory job registry for asynchronous/polling status
-_job_store: Dict[str, Dict[str, Any]] = {}
+_job_store: dict[str, dict[str, Any]] = {}
 
 
 @ai_router.get("/health")
-def get_ai_health() -> Dict[str, Any]:
+def get_ai_health() -> dict[str, Any]:
     """Check AI subsystem health and provider availability."""
     settings = get_settings()
     provider = get_llm_provider()
     provider_health = provider.health_check()
-    
+
     return {
         "status": "healthy",
         "subsystem": "ai_data_science",
@@ -58,7 +59,7 @@ def get_ai_health() -> Dict[str, Any]:
 
 
 @ai_router.get("/capabilities")
-def get_ai_capabilities() -> Dict[str, Any]:
+def get_ai_capabilities() -> dict[str, Any]:
     """Discover active clinical NLP and AI capabilities."""
     return {
         "version": "1.0.0",
@@ -102,7 +103,7 @@ def get_ai_capabilities() -> Dict[str, Any]:
 
 
 @ai_router.get("/languages")
-def get_languages() -> List[Dict[str, Any]]:
+def get_languages() -> list[dict[str, Any]]:
     """List registered languages, OCR packs, and validation status."""
     return [lang.model_dump() for lang in language_registry.list_all()]
 
@@ -188,7 +189,7 @@ def get_extracted_clinical_data(
 @ai_router.post("/documents/{document_id}/explain", response_model=GroundedExplanation)
 def explain_document(
     document_id: str,
-    body: Optional[ExplainRequest] = None,
+    body: ExplainRequest | None = None,
     tenant_id: str = Depends(get_current_tenant),
 ) -> GroundedExplanation:
     """Generate grounded, patient-friendly explanation in English, Hindi, or Marathi."""
@@ -298,7 +299,7 @@ def translate_clinical_text(
 def get_job_status(
     job_id: str,
     tenant_id: str = Depends(get_current_tenant),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Query analysis job status by job ID."""
     job = _job_store.get(job_id)
     if not job or job.get("tenant_id") != tenant_id:
@@ -312,7 +313,7 @@ def get_job_status(
 @ai_router.get("/evaluation/summary")
 def get_evaluation_summary(
     tenant_id: str = Depends(get_current_tenant),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Retrieve latest automated benchmark and quality metrics summary."""
     return {
         "benchmark_dataset_version": "1.0-synthetic",

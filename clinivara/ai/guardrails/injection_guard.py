@@ -4,7 +4,6 @@ Protects AI prompts and inference pipelines against adversarial instruction inje
 """
 
 import re
-from typing import List, Tuple
 
 
 class PromptInjectionGuard:
@@ -25,13 +24,11 @@ class PromptInjectionGuard:
         r"act\s+as\s+dan",
         r"developer\s+mode\s+enabled",
         r"output\s+the\s+preceding\s+text",
-        
         # Hindi jailbreak attempts
         r"पिछले\s+(सभी\s+)?निर्देशों\s+को\s+(भूल\s+जाएं|अनदेखा\s+करें|रद्द\s+करें)",
         r"सिस्टम\s+प्रॉम्प्ट\s+दिखाएं",
         r"नए\s+निर्देश\s+का\s+पालन\s+करें",
         r"सुरक्षा\s+नियम\s+तोड़ें",
-
         # Marathi jailbreak attempts
         r"मागील\s+(सर्व\s+)?सूचना\s+(दुर्लक्षित\s+करा|विसरा|रद्द\s+करा)",
         r"सिस्टम\s+प्रॉम्प्ट\s+दाखवा",
@@ -43,7 +40,7 @@ class PromptInjectionGuard:
             re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in self.INJECTION_PATTERNS
         ]
 
-    def inspect_text(self, text: str) -> Tuple[bool, List[str]]:
+    def inspect_text(self, text: str) -> tuple[bool, list[str]]:
         """
         Scan text for prompt injection signatures.
         Returns:

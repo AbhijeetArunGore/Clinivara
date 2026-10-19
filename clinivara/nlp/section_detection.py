@@ -3,12 +3,13 @@ Multilingual clinical section detection supporting English, Hindi, and Marathi m
 """
 
 import re
-from typing import List
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class DetectedSection(BaseModel):
     """Normalized clinical section with language and boundary tracking."""
+
     model_config = ConfigDict(frozen=True)
 
     title: str = Field(description="Canonical section identifier")
@@ -26,11 +27,17 @@ SECTION_HEADING_PATTERNS = [
     # Chief Complaint
     (r"(?:CHIEF\s+COMPLAINT|REASON\s+FOR\s+VISIT|मुख्य\s+समस्या|मुख्य\s+तक्रार)", "CHIEF_COMPLAINT"),
     # History
-    (r"(?:HISTORY\s+OF\s+PRESENT\s+ILLNESS|HPI|PAST\s+MEDICAL\s+HISTORY|PMH|MEDICAL\s+HISTORY|पूर्व\s+इतिहास|मागील\s+इतिहास|इतिहास)", "HISTORY"),
+    (
+        r"(?:HISTORY\s+OF\s+PRESENT\s+ILLNESS|HPI|PAST\s+MEDICAL\s+HISTORY|PMH|MEDICAL\s+HISTORY|पूर्व\s+इतिहास|मागील\s+इतिहास|इतिहास)",
+        "HISTORY",
+    ),
     # Medications
     (r"(?:CURRENT\s+MEDICATIONS?|MEDICATIONS?|RX|दवाएं|औषधे|सध्याची\s+औषधे)", "MEDICATIONS"),
     # Investigations / Labs
-    (r"(?:LABORATORY(?:\s+DATA|\s+RESULTS)?|INVESTIGATIONS|LABS|जांच\s+परिणाम|प्रयोगशाळा\s+तपासणी|चाचण्या|तपासणी\s+अहवाल)", "LABORATORY_RESULTS"),
+    (
+        r"(?:LABORATORY(?:\s+DATA|\s+RESULTS)?|INVESTIGATIONS|LABS|जांच\s+परिणाम|प्रयोगशाळा\s+तपासणी|चाचण्या|तपासणी\s+अहवाल)",
+        "LABORATORY_RESULTS",
+    ),
     # Diagnoses / Impression
     (r"(?:DIAGNOSIS|DIAGNOSES|IMPRESSION|ASSESSMENT|निदान|रोगनिदान)", "DIAGNOSIS"),
     # Plan / Advice
@@ -49,7 +56,7 @@ class SectionDetector:
     """Detects and parses clinical sections across English, Hindi, and Marathi documents."""
 
     @staticmethod
-    def detect_sections(text: str) -> List[DetectedSection]:
+    def detect_sections(text: str) -> list[DetectedSection]:
         if not text or not text.strip():
             return []
 
@@ -65,11 +72,11 @@ class SectionDetector:
                 )
             ]
 
-        sections: List[DetectedSection] = []
+        sections: list[DetectedSection] = []
 
         # Preamble before first header
         if matches[0].start() > 0:
-            preamble_text = text[:matches[0].start()].strip()
+            preamble_text = text[: matches[0].start()].strip()
             if preamble_text:
                 sections.append(
                     DetectedSection(
@@ -107,7 +114,7 @@ class SectionDetector:
         return sections
 
     @classmethod
-    def segment_sections(cls, text: str) -> List[DetectedSection]:
+    def segment_sections(cls, text: str) -> list[DetectedSection]:
         return cls.detect_sections(text)
 
 

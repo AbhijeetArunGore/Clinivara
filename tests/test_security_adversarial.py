@@ -3,9 +3,7 @@ Adversarial security tests: path traversal, cross-tenant isolation, log injectio
 unauthorized retrieval, and spoofed payloads.
 """
 
-import io
 import pytest
-from fastapi.testclient import TestClient
 
 from clinivara.audit.audit_logger import sanitize_log_string
 from clinivara.core.errors import SecurityViolationError

@@ -3,6 +3,7 @@ API router registering all v1 endpoints.
 """
 
 from fastapi import APIRouter
+
 from clinivara.api.ai import ai_router
 from clinivara.api.documents import documents_router
 from clinivara.api.health import health_router

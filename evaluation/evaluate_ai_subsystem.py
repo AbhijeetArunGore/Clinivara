@@ -11,10 +11,10 @@ Outputs reproducible machine-readable JSON and Markdown benchmark reports.
 """
 
 import json
-from pathlib import Path
 import sys
 import time
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any
 
 # Ensure repository root is on sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -24,8 +24,6 @@ from clinivara.clinical.document_classifier import ClinicalDocumentClassifier
 from clinivara.clinical.extraction.extractor import ClinicalExtractor
 from clinivara.multilingual.language_detection import LanguageDetector
 from clinivara.multilingual.unicode_normalizer import DevanagariUnicodeNormalizer
-from clinivara.rag.chunking import ClinicalDocumentChunker
-from clinivara.rag.indexing import IsolatedDocumentIndex
 from clinivara.rag.retrieval import ClinicalRetriever
 from clinivara.schemas.ai import QuestionAnswerRequest
 from clinivara.schemas.approved_output import (
@@ -37,12 +35,12 @@ from clinivara.schemas.approved_output import (
 )
 
 
-def run_ai_benchmark() -> Dict[str, Any]:
+def run_ai_benchmark() -> dict[str, Any]:
     dataset_path = Path(__file__).parent / "datasets" / "synthetic_benchmark_v1.json"
     if not dataset_path.exists():
         raise FileNotFoundError(f"Benchmark dataset not found at {dataset_path}")
 
-    with open(dataset_path, "r", encoding="utf-8") as f:
+    with open(dataset_path, encoding="utf-8") as f:
         cases = json.load(f)
 
     lang_detector = LanguageDetector()
@@ -50,7 +48,6 @@ def run_ai_benchmark() -> Dict[str, Any]:
     classifier = ClinicalDocumentClassifier()
     extractor = ClinicalExtractor()
     injection_guard = PromptInjectionGuard()
-    chunker = ClinicalDocumentChunker()
     retriever = ClinicalRetriever()
 
     # Metrics accumulators
@@ -69,12 +66,12 @@ def run_ai_benchmark() -> Dict[str, Any]:
     rag_status_correct = 0
     rag_citations_valid = 0
 
-    latencies_ms: List[float] = []
+    latencies_ms: list[float] = []
 
-    print(f"\n=======================================================")
-    print(f"CLINIVARA AI & CLINICAL DATA SCIENCE BENCHMARK RUNNER")
+    print("\n=======================================================")
+    print("CLINIVARA AI & CLINICAL DATA SCIENCE BENCHMARK RUNNER")
     print(f"Evaluating {total_cases} synthetic test cases...")
-    print(f"=======================================================\n")
+    print("=======================================================\n")
 
     for case in cases:
         case_id = case["id"]
@@ -133,7 +130,9 @@ def run_ai_benchmark() -> Dict[str, Any]:
             # Or in raw negations
             if not found:
                 for line in norm_text.splitlines():
-                    if exp_neg.lower() in line.lower() and any(w in line.lower() for w in ["no", "not", "नहीं", "नाही", "कोणताही"]):
+                    if exp_neg.lower() in line.lower() and any(
+                        w in line.lower() for w in ["no", "not", "नहीं", "नाही", "कोणताही"]
+                    ):
                         found = True
                         break
             if found:
@@ -150,7 +149,9 @@ def run_ai_benchmark() -> Dict[str, Any]:
                 extraction=ExtractionMetadata(status="COMPLETED", pages_processed=1, methods_used=["text"]),
                 deidentification=DeidentificationMetadata(status="COMPLETED", validation_status="PASSED"),
                 clinical_content=ClinicalContent(text=norm_text, sections=[]),
-                quality=QualityMetadata(schema_valid=True, clinical_content_preserved=True, residual_identifiers_detected=0),
+                quality=QualityMetadata(
+                    schema_valid=True, clinical_content_preserved=True, residual_identifiers_detected=0
+                ),
             )
 
             for rq in rag_cases:
@@ -170,7 +171,9 @@ def run_ai_benchmark() -> Dict[str, Any]:
 
         latency = (time.perf_counter() - t0) * 1000
         latencies_ms.append(latency)
-        print(f"  [OK] {case_id:<26} Lang: {lang_res.detected_language} | Class: {class_res.category} | Obs: {len(ext_res.observations)} | Time: {latency:.1f}ms")
+        print(
+            f"  [OK] {case_id:<26} Lang: {lang_res.detected_language} | Class: {class_res.category} | Obs: {len(ext_res.observations)} | Time: {latency:.1f}ms"
+        )
 
     # Aggregate Metrics Calculation
     lang_acc = lang_correct / total_cases if total_cases else 0.0
@@ -217,19 +220,19 @@ def run_ai_benchmark() -> Dict[str, Any]:
         f.write("## Metric Summary\n\n")
         f.write("| Evaluation Metric | Score | Target | Status |\n")
         f.write("|---|---|---|---|\n")
-        f.write(f"| Language Detection Accuracy | {lang_acc*100:.1f}% | >= 90.0% | PASS |\n")
-        f.write(f"| Document Classification Accuracy | {doc_class_acc*100:.1f}% | >= 85.0% | PASS |\n")
-        f.write(f"| Numeric Value Extraction Accuracy | {val_acc*100:.1f}% | >= 95.0% | PASS |\n")
-        f.write(f"| Unit Preservation Accuracy | {unit_acc*100:.1f}% | >= 98.0% | PASS |\n")
-        f.write(f"| Reference Range Preservation | {ref_acc*100:.1f}% | >= 90.0% | PASS |\n")
-        f.write(f"| Negation Preservation Fidelity | {neg_acc*100:.1f}% | >= 90.0% | PASS |\n")
-        f.write(f"| Prompt Injection Block Rate | {inj_rate*100:.1f}% | 100.0% | PASS |\n")
-        f.write(f"| RAG Sufficiency Decision Accuracy | {rag_acc*100:.1f}% | >= 95.0% | PASS |\n")
-        f.write(f"| RAG Citation Verifiability | {rag_cit_acc*100:.1f}% | >= 95.0% | PASS |\n")
+        f.write(f"| Language Detection Accuracy | {lang_acc * 100:.1f}% | >= 90.0% | PASS |\n")
+        f.write(f"| Document Classification Accuracy | {doc_class_acc * 100:.1f}% | >= 85.0% | PASS |\n")
+        f.write(f"| Numeric Value Extraction Accuracy | {val_acc * 100:.1f}% | >= 95.0% | PASS |\n")
+        f.write(f"| Unit Preservation Accuracy | {unit_acc * 100:.1f}% | >= 98.0% | PASS |\n")
+        f.write(f"| Reference Range Preservation | {ref_acc * 100:.1f}% | >= 90.0% | PASS |\n")
+        f.write(f"| Negation Preservation Fidelity | {neg_acc * 100:.1f}% | >= 90.0% | PASS |\n")
+        f.write(f"| Prompt Injection Block Rate | {inj_rate * 100:.1f}% | 100.0% | PASS |\n")
+        f.write(f"| RAG Sufficiency Decision Accuracy | {rag_acc * 100:.1f}% | >= 95.0% | PASS |\n")
+        f.write(f"| RAG Citation Verifiability | {rag_cit_acc * 100:.1f}% | >= 95.0% | PASS |\n")
         f.write(f"| Average Processing Latency | {avg_latency:.1f} ms | < 500 ms | PASS |\n\n")
         f.write("All metrics validated deterministically without external cloud dependencies.\n")
 
-    print(f"\nBenchmark completed successfully!")
+    print("\nBenchmark completed successfully!")
     print(f"JSON Report: {json_path}")
     print(f"Markdown Report: {md_path}")
     return report

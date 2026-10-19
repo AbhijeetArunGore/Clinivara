@@ -10,7 +10,7 @@ Enforces:
 
 import re
 import unicodedata
-from typing import List, Tuple
+
 from clinivara.schemas.approved_output import ClinicalSection
 
 # Standard clinical section headings recognized in clinical reports
@@ -74,7 +74,7 @@ class TextCleaner:
         return "\n".join(lines).strip()
 
     @staticmethod
-    def extract_sections(text: str) -> List[ClinicalSection]:
+    def extract_sections(text: str) -> list[ClinicalSection]:
         """
         Extract recognizable clinical sections while keeping unsectioned content intact.
         """
@@ -82,7 +82,7 @@ class TextCleaner:
         if not matches:
             return [ClinicalSection(title="GENERAL_REPORT", content=text.strip())]
 
-        sections: List[ClinicalSection] = []
+        sections: list[ClinicalSection] = []
 
         # If there is introductory text before the first heading
         first_start = matches[0].start()

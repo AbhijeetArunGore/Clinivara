@@ -3,8 +3,8 @@ Defensive PDF inspector and digital text extractor using PyMuPDF.
 """
 
 from pathlib import Path
-from typing import Dict, List, Tuple
-import fitz  # PyMuPDF
+
+import pymupdf as fitz
 
 from clinivara.core.config import settings
 from clinivara.core.errors import ExtractionError
@@ -14,7 +14,7 @@ class PDFInspector:
     """Inspects PDFs, extracts digital text, and renders selective OCR fallback pages."""
 
     @staticmethod
-    def inspect_and_extract_digital(pdf_path: Path) -> List[Tuple[int, str, bool]]:
+    def inspect_and_extract_digital(pdf_path: Path) -> list[tuple[int, str, bool]]:
         """
         Extracts digital text page-by-page.
         Returns:

@@ -3,6 +3,7 @@ Unit tests for the independent release gate, residual scanner, and fail-closed p
 """
 
 import pytest
+
 from clinivara.core.errors import UnapprovedOutputAccessError
 from clinivara.extraction.models import ExtractionResult, PageExtraction
 from clinivara.schemas.approved_output import (
@@ -42,13 +43,15 @@ def test_release_gate_approval():
         document_id=doc_id,
         tenant_id=tenant_id,
         correlation_id=corr_id,
-        pages=[PageExtraction(
-            page_number=1,
-            method="DIGITAL_TEXT",
-            text=raw_text,
-            character_count=len(raw_text),
-            word_count=len(raw_text.split()),
-        )],
+        pages=[
+            PageExtraction(
+                page_number=1,
+                method="DIGITAL_TEXT",
+                text=raw_text,
+                character_count=len(raw_text),
+                word_count=len(raw_text.split()),
+            )
+        ],
         methods_used=["embedded_digital_text"],
         total_pages=1,
         status="COMPLETED",
@@ -89,13 +92,15 @@ def test_release_gate_fail_closed_rejection():
         document_id=doc_id,
         tenant_id=tenant_id,
         correlation_id=corr_id,
-        pages=[PageExtraction(
-            page_number=1,
-            method="DIGITAL_TEXT",
-            text=raw_text,
-            character_count=len(raw_text),
-            word_count=len(raw_text.split()),
-        )],
+        pages=[
+            PageExtraction(
+                page_number=1,
+                method="DIGITAL_TEXT",
+                text=raw_text,
+                character_count=len(raw_text),
+                word_count=len(raw_text.split()),
+            )
+        ],
         methods_used=["embedded_digital_text"],
         total_pages=1,
         status="COMPLETED",
@@ -131,7 +136,11 @@ def test_approved_output_model_invariant_enforcement():
             tenant_id="tenant_x",
             processing_status="APPROVED",
             extraction=ExtractionMetadata(status="COMPLETED", pages_processed=1, methods_used=["digital_text"]),
-            deidentification=DeidentificationMetadata(status="COMPLETED", policy_version="1.0", validation_status="PASSED"),
+            deidentification=DeidentificationMetadata(
+                status="COMPLETED", policy_version="1.0", validation_status="PASSED"
+            ),
             clinical_content=ClinicalContent(text="Patient: [NAME]", sections=[]),
-            quality=QualityMetadata(schema_valid=True, clinical_content_preserved=True, residual_identifiers_detected=1),
+            quality=QualityMetadata(
+                schema_valid=True, clinical_content_preserved=True, residual_identifiers_detected=1
+            ),
         )

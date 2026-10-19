@@ -5,7 +5,8 @@ Ensures no internal filesystem paths, stack traces, patient identifiers,
 or sensitive clinical snippets are exposed to clients.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import HTTPException, status
 
 
@@ -17,7 +18,7 @@ class ClinivaraError(Exception):
         message: str,
         error_code: str = "PROCESSING_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        safe_details: Optional[Dict[str, Any]] = None,
+        safe_details: dict[str, Any] | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -25,7 +26,7 @@ class ClinivaraError(Exception):
         self.status_code = status_code
         self.safe_details = safe_details or {}
 
-    def to_http_exception(self, correlation_id: Optional[str] = None) -> HTTPException:
+    def to_http_exception(self, correlation_id: str | None = None) -> HTTPException:
         return HTTPException(
             status_code=self.status_code,
             detail={
@@ -62,7 +63,7 @@ class DocumentTooLargeError(SecurityViolationError):
     def __init__(self, message: str = "Document exceeds allowable size limits."):
         super().__init__(message=message)
         self.error_code = "DOCUMENT_TOO_LARGE"
-        self.status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        self.status_code = getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413)
 
 
 class ExtractionError(ClinivaraError):

@@ -4,7 +4,8 @@ Enforces security boundaries: rejects external transmission unless explicitly au
 """
 
 import json
-from typing import Any, Dict, Optional, Type
+from typing import Any
+
 import httpx
 from pydantic import BaseModel, ValidationError
 
@@ -17,10 +18,10 @@ class OpenAICompatibleProvider(LLMProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
-        timeout: Optional[float] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
+        timeout: float | None = None,
     ):
         settings = get_settings()
         self.api_key = api_key or settings.openai_api_key
@@ -39,7 +40,7 @@ class OpenAICompatibleProvider(LLMProvider):
         if not self.api_key and "localhost" not in self.base_url and "127.0.0.1" not in self.base_url:
             raise ValueError("OPENAI_API_KEY is required for external LLM endpoint.")
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         if not self.enable_external:
             return {
                 "status": "disabled_by_policy",
@@ -59,7 +60,7 @@ class OpenAICompatibleProvider(LLMProvider):
     def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 1000,
     ) -> str:
@@ -90,8 +91,8 @@ class OpenAICompatibleProvider(LLMProvider):
     def generate_structured(
         self,
         prompt: str,
-        response_model: Type[BaseModel],
-        system_prompt: Optional[str] = None,
+        response_model: type[BaseModel],
+        system_prompt: str | None = None,
         temperature: float = 0.0,
     ) -> BaseModel:
         self._check_policy()

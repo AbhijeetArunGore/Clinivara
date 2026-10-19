@@ -7,12 +7,9 @@ Automated unit and integration tests for clinical RAG:
 - Insufficient evidence handling.
 """
 
-import pytest
-
 from clinivara.rag.chunking import ClinicalDocumentChunker
-from clinivara.rag.citations import CitationManager
 from clinivara.rag.embeddings import LocalMultilingualEmbedder
-from clinivara.rag.indexing import DocumentIndexManager, IsolatedDocumentIndex
+from clinivara.rag.indexing import DocumentIndexManager
 from clinivara.rag.retrieval import ClinicalRetriever
 from clinivara.schemas.ai import QuestionAnswerRequest
 from clinivara.schemas.approved_output import (
@@ -70,7 +67,7 @@ def test_tenant_isolated_index_prevents_cross_tenant_leakage():
 
     # Index doc 2 for tenant B
     doc_b_chunks = chunker.chunk_document("doc_b", "tenant_b", "Patient Sunita has Hypertension.")
-    index_b = index_mgr.get_or_create_index("tenant_b", "doc_b", doc_b_chunks)
+    _ = index_mgr.get_or_create_index("tenant_b", "doc_b", doc_b_chunks)
 
     # Searching index A must only return doc_a chunks
     results_a = index_a.search("Hypertension", top_k=5)

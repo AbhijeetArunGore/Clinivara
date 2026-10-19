@@ -3,8 +3,8 @@ AI Workflow and Orchestration package.
 """
 
 from clinivara.ai.orchestration.workflow import (
-    ClinicalAnalysisWorkflow,
     PERMITTED_TRANSITIONS,
+    ClinicalAnalysisWorkflow,
     StageTiming,
     WorkflowResult,
     WorkflowState,

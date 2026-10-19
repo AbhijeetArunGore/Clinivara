@@ -2,18 +2,18 @@
 Versioned Prompt Registry implementing Prompts A through G with strict safety boundaries.
 """
 
-from typing import Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class PromptTemplate(BaseModel):
     """Immutable versioned prompt definition with schema and safety contracts."""
+
     model_config = ConfigDict(frozen=True)
 
     name: str
     version: str = "1.0.0"
     purpose: str
-    supported_languages: List[str] = Field(default_factory=lambda: ["en", "hi", "mr"])
+    supported_languages: list[str] = Field(default_factory=lambda: ["en", "hi", "mr"])
     system_prompt: str
     user_template: str
 
@@ -157,7 +157,7 @@ class PromptRegistry:
     """Version-controlled registry for AI prompts."""
 
     def __init__(self):
-        self._prompts: Dict[str, PromptTemplate] = {
+        self._prompts: dict[str, PromptTemplate] = {
             "A_CLASSIFICATION": PROMPT_A_CLASSIFICATION,
             "B_EXTRACTION": PROMPT_B_EXTRACTION,
             "C_VALIDATION": PROMPT_C_VALIDATION,
@@ -167,10 +167,10 @@ class PromptRegistry:
             "G_CONSISTENCY_CHECK": PROMPT_G_CONSISTENCY_CHECK,
         }
 
-    def get_prompt(self, prompt_key: str) -> Optional[PromptTemplate]:
+    def get_prompt(self, prompt_key: str) -> PromptTemplate | None:
         return self._prompts.get(prompt_key.upper())
 
-    def list_prompts(self) -> List[str]:
+    def list_prompts(self) -> list[str]:
         return list(self._prompts.keys())
 
 

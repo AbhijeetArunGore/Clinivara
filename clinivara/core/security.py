@@ -10,7 +10,6 @@ import re
 import secrets
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from clinivara.core.config import settings
 from clinivara.core.errors import SecurityViolationError, UnauthorizedAccessError
@@ -38,7 +37,7 @@ def calculate_sha256_digest(file_path: Path, chunk_size: int = 65536) -> str:
     return hasher.hexdigest()
 
 
-def sanitize_filename(filename: Optional[str]) -> str:
+def sanitize_filename(filename: str | None) -> str:
     """
     Sanitize user-provided filename:
     - Strips directory components to prevent path traversal
@@ -65,7 +64,7 @@ def sanitize_filename(filename: Optional[str]) -> str:
     return sanitized[:128]
 
 
-def verify_api_key(provided_key: Optional[str]) -> str:
+def verify_api_key(provided_key: str | None) -> str:
     """
     Verify client API key using constant-time comparison to prevent timing attacks.
     Returns the associated tenant/client ID if valid.
@@ -80,13 +79,13 @@ def verify_api_key(provided_key: Optional[str]) -> str:
     raise UnauthorizedAccessError("Invalid or revoked API key.")
 
 
-def generate_pseudonym_token(entity_type: str, raw_value: str, salt: Optional[str] = None) -> str:
+def generate_pseudonym_token(entity_type: str, raw_value: str, salt: str | None = None) -> str:
     """
     Generate a cryptographically secure pseudonymous token using HMAC-SHA256.
     Protects against dictionary attacks by using a high-entropy secret salt.
     Does NOT leak the original identifier or use unsalted hashes.
     """
     active_salt = (salt or settings.tokenization_salt).encode("utf-8")
-    mac = hmac.new(active_salt, f"{entity_type}:{raw_value.strip().lower()}".encode("utf-8"), hashlib.sha256)
+    mac = hmac.new(active_salt, f"{entity_type}:{raw_value.strip().lower()}".encode(), hashlib.sha256)
     short_token = mac.hexdigest()[:12].upper()
     return f"[{entity_type}_{short_token}]"

@@ -7,12 +7,11 @@ Enforces:
 3. Zero leakage of raw clinical text, patient names, or sensitive identifiers.
 """
 
-import json
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from clinivara.core.config import settings
 from clinivara.schemas.audit import AuditEvent
@@ -21,9 +20,7 @@ from clinivara.schemas.audit import AuditEvent
 logger = logging.getLogger("clinivara.audit")
 if not logger.handlers:
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "[%(asctime)s] [%(levelname)s] [tenant=%(tenant_id)s] [doc=%(doc_id)s] %(message)s"
-    )
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [tenant=%(tenant_id)s] [doc=%(doc_id)s] %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(settings.log_level)
@@ -42,7 +39,7 @@ def sanitize_log_string(val: Any) -> str:
 class AuditLogger:
     """Thread-safe append-only audit event logger."""
 
-    def __init__(self, log_path: Optional[Path] = None):
+    def __init__(self, log_path: Path | None = None):
         self.log_path = log_path or settings.audit_log_path
         self._ensure_log_dir()
 
@@ -55,8 +52,8 @@ class AuditLogger:
         correlation_id: str,
         event_type: Any,
         status: str,
-        document_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        document_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> AuditEvent:
         """
         Record an immutable structured audit event to the append-only log.
@@ -65,7 +62,9 @@ class AuditLogger:
         if details:
             for k, v in details.items():
                 # Strictly prevent leaking raw text or personal information
-                if any(bad in k.lower() for bad in ["raw", "text", "name", "phone", "email", "address", "ssn", "secret"]):
+                if any(
+                    bad in k.lower() for bad in ["raw", "text", "name", "phone", "email", "address", "ssn", "secret"]
+                ):
                     safe_details[k] = "[REDACTED_FROM_AUDIT]"
                 elif isinstance(v, str):
                     safe_details[k] = sanitize_log_string(v)[:256]
@@ -73,8 +72,8 @@ class AuditLogger:
                     safe_details[k] = v
 
         event = AuditEvent(
-            event_id=f"audit_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{correlation_id[-6:]}",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            event_id=f"audit_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}_{correlation_id[-6:]}",
+            timestamp=datetime.now(UTC).isoformat(),
             tenant_id=sanitize_log_string(tenant_id),
             document_id=sanitize_log_string(document_id) if document_id else None,
             correlation_id=sanitize_log_string(correlation_id),

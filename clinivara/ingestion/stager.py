@@ -2,12 +2,10 @@
 Secure staging pipeline for untrusted document uploads into Boundary A.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Tuple
 
 from clinivara.audit.audit_logger import audit_logger
-from clinivara.core.errors import InvalidDocumentError
 from clinivara.core.security import (
     calculate_sha256_digest,
     generate_document_id,
@@ -30,7 +28,7 @@ class DocumentStager:
         original_filename: str,
         tenant_id: str,
         correlation_id: str,
-    ) -> Tuple[str, Path, str, int]:
+    ) -> tuple[str, Path, str, int]:
         """
         Validates untrusted upload and commits it to Boundary A.
         Returns (document_id, staged_file_path, sha256_digest, page_count).
@@ -82,8 +80,8 @@ class DocumentStager:
             "sha256_digest": digest,
             "status": "STAGED",
             "stage": "INGESTION_COMPLETED",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
         storage_manager.save_document_metadata(tenant_id, document_id, initial_meta)
 

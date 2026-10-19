@@ -3,21 +3,19 @@ Deterministic Mock LLM Provider for offline testing, CI/CD, and non-external LLM
 Guarantees schema-compliant responses without network access or third-party API dependencies.
 """
 
-import json
 import re
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
+
 from pydantic import BaseModel
 
 from clinivara.ai.providers.base import LLMProvider
 from clinivara.schemas.ai import (
     Citation,
-    ClinicalEntity,
     ClinicalObservation,
     DocumentClassificationResult,
     ExtractedClinicalData,
     GroundedExplanation,
     KeyFindingExplanation,
-    MedicationEntity,
     QuestionAnswerResponse,
     ReferenceRange,
     TranslationResponse,
@@ -30,7 +28,7 @@ class MockLLMProvider(LLMProvider):
     def __init__(self, mock_language: str = "en"):
         self.mock_language = mock_language
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         return {
             "status": "healthy",
             "provider": "mock",
@@ -41,7 +39,7 @@ class MockLLMProvider(LLMProvider):
     def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 1000,
     ) -> str:
@@ -56,8 +54,8 @@ class MockLLMProvider(LLMProvider):
     def generate_structured(
         self,
         prompt: str,
-        response_model: Type[BaseModel],
-        system_prompt: Optional[str] = None,
+        response_model: type[BaseModel],
+        system_prompt: str | None = None,
         temperature: float = 0.0,
     ) -> BaseModel:
         """Generate schema-conforming Pydantic models deterministically."""
@@ -71,7 +69,7 @@ class MockLLMProvider(LLMProvider):
             return self._mock_qna(prompt)
         elif issubclass(response_model, TranslationResponse):
             return self._mock_translation(prompt)
-        
+
         # Generic fallback using response_model fields if custom type requested
         return response_model.model_construct()
 
@@ -86,7 +84,10 @@ class MockLLMProvider(LLMProvider):
             category = "HEMATOLOGY_CBC"
             confidence = 0.95
             evidence_spans.append("Detected complete blood count test parameters")
-        elif any(w in prompt_lower for w in ["glucose", "creatinine", "urea", "bilirubin", "lipid", "cholesterol", "बायोकेमिस्ट्री"]):
+        elif any(
+            w in prompt_lower
+            for w in ["glucose", "creatinine", "urea", "bilirubin", "lipid", "cholesterol", "बायोकेमिस्ट्री"]
+        ):
             category = "BIOCHEMISTRY_METABOLIC"
             confidence = 0.92
             evidence_spans.append("Detected metabolic panel parameters")
@@ -96,7 +97,7 @@ class MockLLMProvider(LLMProvider):
             evidence_spans.append("Detected discharge summary clinical structure")
 
         # Script detection
-        if any('\u0900' <= char <= '\u097F' for char in prompt):
+        if any("\u0900" <= char <= "\u097f" for char in prompt):
             if "आहे" in prompt or "नाही" in prompt or "रुग्ण" in prompt:
                 detected_lang = "mr"
             else:
@@ -114,8 +115,8 @@ class MockLLMProvider(LLMProvider):
 
     def _mock_extraction(self, prompt: str) -> ExtractedClinicalData:
         # Simple regex extraction for key synthetic test parameters in prompt
-        observations: List[ClinicalObservation] = []
-        
+        observations: list[ClinicalObservation] = []
+
         # Pattern for "TestName: Value Unit (Ref)" or "TestName Value Unit Ref"
         lines = prompt.splitlines()
         for idx, line in enumerate(lines):
@@ -141,7 +142,7 @@ class MockLLMProvider(LLMProvider):
                                 raw_text="12.0 - 15.0",
                                 low=12.0,
                                 high=15.0,
-                                unit="g/dL" if "hemo" in test.lower() else "mg/dL"
+                                unit="g/dL" if "hemo" in test.lower() else "mg/dL",
                             ),
                             source_reported_status=None,
                             derived_status="NORMAL",
@@ -179,7 +180,9 @@ class MockLLMProvider(LLMProvider):
 
         # Extract evidence citations from prompt if present
         evidence_match = re.search(r"<evidence>\s*(.*?)\s*</evidence>", prompt, re.DOTALL)
-        evidence_lines = [l.strip() for l in evidence_match.group(1).splitlines() if l.strip()] if evidence_match else []
+        evidence_lines = (
+            [line.strip() for line in evidence_match.group(1).splitlines() if line.strip()] if evidence_match else []
+        )
 
         citations = []
         key_findings = []
@@ -231,7 +234,9 @@ class MockLLMProvider(LLMProvider):
             summary = "हा एक वैद्यकीय प्रयोगशाळा तपासणी अहवाल आहे ज्यामध्ये निकाल सामान्य आढळले आहेत."
             educational_context = "रक्त तपासणी शरीराच्या एकूण आरोग्याचे आणि घटकांचे मूल्यमापन करण्यात मदत करते."
         else:
-            summary = "This is a medical laboratory report showing findings evaluated against reported reference ranges."
+            summary = (
+                "This is a medical laboratory report showing findings evaluated against reported reference ranges."
+            )
             educational_context = "Laboratory tests evaluate cellular components, enzymes, and metabolic markers to assist healthcare providers."
 
         return GroundedExplanation(
@@ -294,7 +299,9 @@ class MockLLMProvider(LLMProvider):
         target_lang = "hi" if "target_language: hi" in prompt.lower() else "mr"
         return TranslationResponse(
             original_text="Hemoglobin is 13.5 g/dL which is within normal limits.",
-            translated_text="हीमोग्लोबिन 13.5 g/dL है जो सामान्य सीमा के भीतर है।" if target_lang == "hi" else "हिमोग्लोबिन 13.5 g/dL आहे जे सामान्य मर्यादेत आहे.",
+            translated_text="हीमोग्लोबिन 13.5 g/dL है जो सामान्य सीमा के भीतर है।"
+            if target_lang == "hi"
+            else "हिमोग्लोबिन 13.5 g/dL आहे जे सामान्य मर्यादेत आहे.",
             source_language="en",
             target_language=target_lang,
             preserved_terms=["Hemoglobin", "13.5", "g/dL"],

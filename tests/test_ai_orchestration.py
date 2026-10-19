@@ -16,12 +16,9 @@ from clinivara.ai.prompts.registry import prompt_registry
 from clinivara.ai.providers.mock_provider import MockLLMProvider
 from clinivara.ai.providers.openai_provider import OpenAICompatibleProvider
 from clinivara.schemas.ai import (
-    Citation,
     ClinicalObservation,
     DocumentClassificationResult,
     GroundedExplanation,
-    KeyFindingExplanation,
-    ReferenceRange,
 )
 from clinivara.schemas.approved_output import (
     ApprovedDocumentOutput,
@@ -53,7 +50,7 @@ def test_openai_provider_security_policy_enforcement():
 
 def test_mock_llm_provider_deterministic_structured_output():
     provider = MockLLMProvider()
-    
+
     # Classification
     cls_res = provider.generate_structured(
         prompt="Hemoglobin: 13.5 g/dL, WBC: 6000",

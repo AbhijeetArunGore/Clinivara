@@ -8,7 +8,9 @@ Configures:
 4. Storage boundary initialization.
 """
 
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,6 +19,8 @@ from clinivara.api.router import api_v1_router
 from clinivara.core.config import settings
 from clinivara.core.errors import ClinivaraError
 from clinivara.storage.storage_manager import storage_manager
+
+logger = logging.getLogger("clinivara")
 
 
 @asynccontextmanager
@@ -40,7 +44,7 @@ app = FastAPI(
 # CORS configuration restricted to authorized frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -68,6 +72,23 @@ async def clinivara_exception_handler(request: Request, exc: ClinivaraError):
             "error_code": exc.error_code,
             "message": exc.message,
             "details": exc.safe_details,
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """
+    Catch-all exception sanitizer to prevent internal stack traces, system paths,
+    or sensitive variables from leaking in unhandled 500 responses.
+    """
+    logger.error("Unhandled server exception: %s", str(exc), exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": "An internal server error occurred. Please contact the system administrator.",
+            "details": {},
         },
     )
 

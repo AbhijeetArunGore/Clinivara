@@ -1,0 +1,86 @@
+name: Clinivara CI & Security Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-format:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy
+
+      - name: Run Ruff Lint Check
+        run: |
+          ruff check .
+
+      - name: Run Ruff Format Check
+        run: |
+          ruff format --check .
+
+  security-scan:
+    name: Secret & Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+  test-suite:
+    name: Automated Unit, Integration & Privacy Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-format]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies (Tesseract OCR & Languages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            tesseract-ocr \
+            tesseract-ocr-eng \
+            tesseract-ocr-hin \
+            tesseract-ocr-mar \
+            libmupdf-dev
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[dev]"
+          python -m spacy download en_core_web_sm
+
+      - name: Execute Pytest Suite
+        run: |
+          pytest -v --durations=10

@@ -2,23 +2,23 @@
 Baseline LOINC clinical laboratory terminology mapping adapter.
 """
 
-from typing import Dict, Optional
 from pydantic import BaseModel, ConfigDict
 
 
 class LOINCConcept(BaseModel):
     """Canonical LOINC observation definition."""
+
     model_config = ConfigDict(frozen=True)
 
     loinc_code: str
     canonical_display: str
     standard_unit: str
     specimen: str
-    reference_low: Optional[float] = None
-    reference_high: Optional[float] = None
+    reference_low: float | None = None
+    reference_high: float | None = None
 
 
-LOINC_DICTIONARY: Dict[str, LOINCConcept] = {
+LOINC_DICTIONARY: dict[str, LOINCConcept] = {
     "hba1c": LOINCConcept(
         loinc_code="4548-4",
         canonical_display="Hemoglobin A1c/Hemoglobin.total in Blood",
@@ -162,7 +162,7 @@ class LOINCTerminologyAdapter:
     """Terminology mapping adapter for laboratory tests."""
 
     @staticmethod
-    def map_test_name(raw_name: str) -> Optional[LOINCConcept]:
+    def map_test_name(raw_name: str) -> LOINCConcept | None:
         if not raw_name:
             return None
         cleaned = raw_name.lower().strip()

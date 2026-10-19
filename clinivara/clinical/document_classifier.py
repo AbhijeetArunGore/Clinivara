@@ -2,23 +2,68 @@
 Clinical document classifier supporting hematology, biochemistry, discharge summaries, and notes.
 """
 
-import re
-from typing import Dict, List, Tuple
 from clinivara.multilingual.language_detection import language_detector
 from clinivara.schemas.ai import DocumentClassificationResult
 
-CATEGORY_SIGNATURES: Dict[str, List[str]] = {
+CATEGORY_SIGNATURES: dict[str, list[str]] = {
     "DIABETES_PANEL": ["hba1c", "glycated hemoglobin", "fasting glucose", "postprandial", "रक्त शर्करा", "डायबिटीज"],
-    "HEMATOLOGY_CBC": ["cbc", "complete blood count", "hemoglobin", "wbc", "rbc", "platelet", "mcv", "हिमोग्लोबिन", "हीमोग्लोबिन", "रक्तपेशी", "रक्त गणना", "सीबीसी"],
+    "HEMATOLOGY_CBC": [
+        "cbc",
+        "complete blood count",
+        "hemoglobin",
+        "wbc",
+        "rbc",
+        "platelet",
+        "mcv",
+        "हिमोग्लोबिन",
+        "हीमोग्लोबिन",
+        "रक्तपेशी",
+        "रक्त गणना",
+        "सीबीसी",
+    ],
     "LIPID_PROFILE": ["lipid profile", "cholesterol", "triglycerides", "hdl", "ldl", "vldl", "कोलेस्ट्रॉल", "चरबी"],
-    "KIDNEY_FUNCTION": ["kft", "rft", "renal function", "creatinine", "blood urea", "bun", "uric acid", "किडनी", "मूत्रपिंड"],
-    "LIVER_FUNCTION": ["lft", "liver function", "bilirubin", "sgot", "sgpt", "alt", "ast", "alkaline phosphatase", "यकृत"],
+    "KIDNEY_FUNCTION": [
+        "kft",
+        "rft",
+        "renal function",
+        "creatinine",
+        "blood urea",
+        "bun",
+        "uric acid",
+        "किडनी",
+        "मूत्रपिंड",
+    ],
+    "LIVER_FUNCTION": [
+        "lft",
+        "liver function",
+        "bilirubin",
+        "sgot",
+        "sgpt",
+        "alt",
+        "ast",
+        "alkaline phosphatase",
+        "यकृत",
+    ],
     "THYROID_PANEL": ["tsh", "thyroid", "free t3", "free t4", "थायराइड"],
     "BIOCHEMISTRY_METABOLIC": [
-        "biochemistry", "biochemistry examination", "serum electrolytes", "glucose",
-        "बायोकेमिस्ट्री", "रक्तातील साखर", "साखर", "ग्लूकोज", "युरिया", "वैद्यकीय चाचणी अहवाल - बायोकेमिस्ट्री"
+        "biochemistry",
+        "biochemistry examination",
+        "serum electrolytes",
+        "glucose",
+        "बायोकेमिस्ट्री",
+        "रक्तातील साखर",
+        "साखर",
+        "ग्लूकोज",
+        "युरिया",
+        "वैद्यकीय चाचणी अहवाल - बायोकेमिस्ट्री",
     ],
-    "DISCHARGE_SUMMARY": ["discharge summary", "hospital discharge", "hospital course", "admission date", "डिस्चार्ज सारांश"],
+    "DISCHARGE_SUMMARY": [
+        "discharge summary",
+        "hospital discharge",
+        "hospital course",
+        "admission date",
+        "डिस्चार्ज सारांश",
+    ],
     "PRESCRIPTION": ["prescription", "rx", "dosage", "tablet", "capsule", "दवाएं", "औषधे"],
     "CLINICAL_NOTE": ["outpatient clinic note", "progress note", "clinic visit", "chief complaint", "रुग्ण तपासणी"],
 }
@@ -46,8 +91,8 @@ class ClinicalDocumentClassifier:
         lower_text = text.lower()
         first_page_text = lower_text[:1500]  # Headers usually carry high classification signal
 
-        scores: Dict[str, float] = {}
-        evidence_spans: Dict[str, List[str]] = {}
+        scores: dict[str, float] = {}
+        evidence_spans: dict[str, list[str]] = {}
 
         for category, keywords in CATEGORY_SIGNATURES.items():
             matched_keywords = []

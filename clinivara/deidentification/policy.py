@@ -2,7 +2,8 @@
 De-identification transformation policies and entity configuration.
 """
 
-from typing import Dict, Literal, Optional
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from clinivara.core.config import settings
@@ -10,6 +11,7 @@ from clinivara.core.config import settings
 
 class TransformationRule(BaseModel):
     """Rule defining how a detected entity category should be transformed."""
+
     action: Literal["redact", "tokenize", "generalize_year", "suppress"] = "redact"
     mask_label: str
     min_confidence: float = 0.60
@@ -20,7 +22,7 @@ class DeidentificationPolicy(BaseModel):
 
     version: str = "1.0"
     default_action: str = "redact"
-    entity_rules: Dict[str, TransformationRule] = Field(
+    entity_rules: dict[str, TransformationRule] = Field(
         default_factory=lambda: {
             "PERSON": TransformationRule(action="redact", mask_label="NAME", min_confidence=0.55),
             "PATIENT_ID": TransformationRule(action="redact", mask_label="PATIENT_ID", min_confidence=0.60),
