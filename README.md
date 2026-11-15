@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![Pydantic v2](https://img.shields.io/badge/Pydantic-v2.9+-e92063.svg)](https://docs.pydantic.dev/)
-[![Tests](https://img.shields.io/badge/tests-69%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)](tests/)
 
 ---
 
@@ -95,7 +95,7 @@ The following diagram illustrates the data flow, component boundaries, and trust
 ```mermaid
 flowchart TD
     subgraph ClientLayer ["Client & Ingestion Layer"]
-        User["Client Request (REST API)"] -->|POST /api/v1/documents/upload| IngestionValidator["Ingestion Validator<br/>• Magic byte verification<br/>• Decompression bomb scan<br/>• Chunked size limit (25MB)"]
+        User["Client Request (REST API)"] -->|POST /api/v1/documents| IngestionValidator["Ingestion Validator<br/>• Magic byte verification<br/>• Decompression bomb scan<br/>• Chunked size limit (25MB)"]
     end
 
     subgraph BoundaryA ["Boundary A: Restricted Raw Vault (POSIX 0700)"]
@@ -162,7 +162,7 @@ Clinivara processes documents through a deterministic, auditable multi-stage lif
 ```
 
 ### Stage 1: Secure Ingestion and Header Verification
-- **Operation**: The client uploads a clinical file (`.pdf`, `.png`, or `.jpeg`) along with their API key via `POST /api/v1/documents/upload`.
+- **Operation**: The client uploads a clinical file (`.pdf`, `.png`, or `.jpeg`) along with their API key via `POST /api/v1/documents`.
 - **Validation**: Clinivara bypasses client-supplied `Content-Type` headers and inspects initial magic bytes (`%PDF-`, `\x89PNG`, `\xff\xd8\xff`). Pillow checks image dimensions to prevent decompression bombs ($< 8000 \times 8000$ pixels, $< 50$ megapixels). Files exceeding 25 MB are rejected during chunked streaming.
 - **Output**: The file is stored in `boundary_a_raw/` using a server-generated `UUID4` identifier. The client's original filename is stripped to eliminate path traversal vulnerabilities.
 
@@ -509,14 +509,14 @@ Clinivara normalizes Devanagari script and maintains clinical dictionaries to tr
 Clinivara maintains an automated test suite executed via `pytest`.
 
 ```
-========================= 69 passed, 1 warning in 3.11s =========================
+========================= 73 passed, 1 warning in 2.63s =========================
 ```
 
-### Test Suite Breakdown (69 Automated Tests)
+### Test Suite Breakdown (73 Automated Tests)
 
 | Test Module | Test Count | Focus Area |
 |---|---|---|
-| `test_security_audit_hardening.py` | 10 | High-entropy production config, path traversal prevention, CORS restrictions, streaming upload bounds. |
+| `test_security_audit_hardening.py` | 14 | Production placeholder rejection, minimum secret/salt/key lengths, path traversal defense, streaming upload bounds. |
 | `test_multilingual_ai.py` | 10 | Language detection, Devanagari Unicode normalization, matra repairs, Indic digit conversion, clinical translation. |
 | `test_ai_api.py` | 9 | REST endpoints (`/health`, `/capabilities`, `/languages`, `/explain`, `/questions`, `/translate`, authentication). |
 | `test_clinical_extraction.py` | 7 | Document classification, tabular key-value parsing, LOINC mapping, UCUM unit validation, negation detection. |
@@ -552,7 +552,7 @@ Clinivara executes an automated GitHub Actions pipeline (`.github/workflows/ci.y
 | **Natural Language Processing** | spaCy (v3.7+) | Statistical tokenization, POS tagging, and NER (`en_core_web_sm`). |
 | **Cryptography** | Python Standard `hmac` & `hashlib` | Salted `HMAC-SHA256` token generation for deterministic pseudonymization. |
 | **Vector Embeddings & RAG** | scikit-learn (v1.5+) & NumPy | Sublinear TF-IDF n-gram vectorization and cosine similarity retrieval. |
-| **Testing & Quality** | Pytest, Ruff, Mypy | 69 unit/integration/adversarial tests, linting, and static type checking. |
+| **Testing & Quality** | Pytest, Ruff, Mypy | 73 unit/integration/adversarial tests, linting, and static type checking. |
 | **Containerization** | Docker & Docker Compose | Non-root container builds and isolated multi-vault environment deployment. |
 
 ---
@@ -647,7 +647,7 @@ Clinivara/
 │   │   └── providers/             # LLM provider abstraction (MockLLMProvider, OpenAI)
 │   ├── api/                       # FastAPI route controllers and dependencies
 │   │   ├── ai.py                  # Clinical AI endpoints (/explain, /questions, /extract)
-│   │   ├── documents.py           # Document endpoints (/upload, /status, /result, /delete)
+│   │   ├── documents.py           # Document endpoints (POST /, GET /{id}/status, GET /{id}/result, DELETE /{id})
 │   │   ├── health.py              # System health check route
 │   │   └── router.py              # Master v1 API router
 │   ├── audit/                     # Append-only structured JSONL audit logger
@@ -665,10 +665,10 @@ Clinivara/
 │   ├── storage/                   # Three-Vault storage manager (Vaults A, B, C, Token Vault)
 │   ├── validation/                # Independent second-pass residual scanner & release gate
 │   └── main.py                    # Application factory, security middleware, CORS
-├── data/                          # Test fixtures, storage root, and audit logs
+├── data/                          # Test fixtures, runtime storage vaults, and audit logs (generated locally; excluded from Git)
 ├── docs/                          # In-depth architectural and security documentation
 ├── evaluation/                    # Repeatable evaluation benchmarks for privacy and utility
-├── tests/                         # Automated test suite (69 passing tests)
+├── tests/                         # Automated test suite (73 passing tests)
 ├── .dockerignore                  # Docker build exclusions
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git tracking exclusions

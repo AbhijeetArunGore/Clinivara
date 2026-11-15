@@ -193,3 +193,92 @@ def test_defensive_security_headers_enforced(client):
     assert response.headers["X-Frame-Options"] == "DENY"
     assert "max-age=31536000" in response.headers["Strict-Transport-Security"]
     assert response.headers["Content-Security-Policy"] == "default-src 'none'; frame-ancestors 'none';"
+
+
+def test_production_rejects_env_example_auth_secret_placeholder(monkeypatch):
+    """Fail-closed: In production, exact placeholder from .env.example must be rejected."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="REPLACE_WITH_GENERATED_AUTH_SECRET",
+            tokenization_salt="prod_salt_high_entropy_random_value_99812",
+            debug=False,
+        )
+    assert "CLINIVARA_AUTH_SECRET_KEY must be a high-entropy secret" in str(exc_info.value)
+
+
+def test_production_rejects_env_example_tokenization_salt_placeholder(monkeypatch):
+    """Fail-closed: In production, exact salt placeholder from .env.example must be rejected."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
+            tokenization_salt="REPLACE_WITH_GENERATED_TOKENIZATION_SALT",
+            debug=False,
+        )
+    assert "CLINIVARA_TOKENIZATION_SALT must be an isolated" in str(exc_info.value)
+
+
+def test_production_rejects_env_example_api_key_placeholder(monkeypatch):
+    """Fail-closed: In production, exact API key placeholder from .env.example must be rejected."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"REPLACE_WITH_GENERATED_API_KEY": "local_tenant"}',
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
+            tokenization_salt="prod_salt_high_entropy_random_value_99812",
+            debug=False,
+        )
+    assert "Default development/testing API keys must be replaced" in str(exc_info.value)
+
+
+def test_production_enforces_minimum_secret_lengths(monkeypatch):
+    """Fail-closed: In production, secrets or salts below 32 chars or API keys below 16 chars are rejected."""
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"real_client_key_991823712893712983712": "prod_clinic"}',
+    )
+    # Test short auth secret (< 32 chars)
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="short_production_secret_key",
+            tokenization_salt="prod_salt_high_entropy_random_value_99812",
+            debug=False,
+        )
+    assert "must be at least 32 characters" in str(exc_info.value)
+
+    # Test short tokenization salt (< 32 chars)
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
+            tokenization_salt="short_prod_salt",
+            debug=False,
+        )
+    assert "must be at least 32 characters" in str(exc_info.value)
+
+    # Test short API key (< 16 chars)
+    monkeypatch.setenv(
+        "CLINIVARA_API_KEYS",
+        '{"short_key": "prod_clinic"}',
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            auth_secret_key="prod_secret_key_high_entropy_random_value_32chars_long",
+            tokenization_salt="prod_salt_high_entropy_random_value_99812",
+            debug=False,
+        )
+    assert "is too short" in str(exc_info.value)

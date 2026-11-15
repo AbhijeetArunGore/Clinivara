@@ -141,10 +141,12 @@ If a document was rejected or requires manual review:
 
 ---
 
-## 4. Secure Deletion
+## 4. Document Deletion
 `DELETE /api/v1/documents/{document_id}`
 
-Deletes original files, scratch directories, approved outputs, and metadata.
+Deletes original files, scratch directories, approved outputs, and metadata associated with the specified document across vault partitions.
+
+> **Implementation Note**: Document deletion unlinks filesystem entries using standard OS filesystem calls (`Path.unlink()` and `shutil.rmtree()`). It removes references across Boundary A, Boundary B scratch, Boundary C, and metadata partitions. It does not provide guaranteed cryptographic wiping or forensic sector-level zeroization of underlying physical magnetic/flash storage, nor does it purge immutable external system backups.
 
 ### Response (HTTP 200 OK)
 ```json
@@ -152,7 +154,7 @@ Deletes original files, scratch directories, approved outputs, and metadata.
   "document_id": "a81d4fe6-0310-449e-b7a4-97c27181f9b3",
   "deleted": true,
   "status": "DELETED",
-  "message": "Document and associated artifacts securely removed according to retention policy."
+  "message": "Document and associated artifacts removed from vault partitions."
 }
 ```
 

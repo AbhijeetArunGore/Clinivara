@@ -157,28 +157,45 @@ class Settings(BaseSettings):
         """
         if self.app_env == "production":
             insecure_key_patterns = [
-                "replace_with_32_byte_secret",
-                "clinivara_insecure_dev_secret_key_change_in_production_32b",
+                "replace_with",
+                "replace_",
                 "change_in_production",
                 "default_secret",
                 "insecure_secret",
+                "placeholder",
+                "example",
             ]
             if any(pattern in self.auth_secret_key.lower() for pattern in insecure_key_patterns):
                 raise ValueError(
                     "Production deployment rejected: CLINIVARA_AUTH_SECRET_KEY must be a high-entropy "
-                    "secret injected from a secure secret store, not a development default."
+                    "secret injected from a secure secret store, not a development default or placeholder."
+                )
+
+            if len(self.auth_secret_key) < 32:
+                raise ValueError(
+                    "Production deployment rejected: CLINIVARA_AUTH_SECRET_KEY must be at least 32 characters "
+                    "in production for cryptographic security."
                 )
 
             insecure_salt_patterns = [
-                "clinivara_secure_salt_value_replace_in_prod",
+                "replace_with",
                 "replace_in_prod",
+                "replace_",
                 "default_salt",
                 "insecure_salt",
+                "placeholder",
+                "example",
             ]
             if any(pattern in self.tokenization_salt.lower() for pattern in insecure_salt_patterns):
                 raise ValueError(
                     "Production deployment rejected: CLINIVARA_TOKENIZATION_SALT must be an isolated, "
-                    "cryptographically random salt configured via environment."
+                    "cryptographically random salt configured via environment, not a default or placeholder."
+                )
+
+            if len(self.tokenization_salt) < 32:
+                raise ValueError(
+                    "Production deployment rejected: CLINIVARA_TOKENIZATION_SALT must be at least 32 characters "
+                    "in production for cryptographic entropy."
                 )
 
             if self.debug:
@@ -190,14 +207,29 @@ class Settings(BaseSettings):
             dev_test_keys = {
                 "clinivara-dev-client-key-alpha-9921",
                 "clinivara-test-client-key-beta-4411",
-                "FAKE_TEST_API_KEY_ALPHA",
-                "FAKE_TEST_API_KEY_BETA",
+                "fake_test_api_key_alpha",
+                "fake_test_api_key_beta",
             }
-            if any(k in self.api_keys for k in dev_test_keys):
-                raise ValueError(
-                    "Production deployment rejected: Default development/testing API keys must be replaced "
-                    "with real client credentials."
-                )
+            insecure_api_key_patterns = [
+                "replace_with",
+                "replace_",
+                "placeholder",
+                "fake_test",
+                "dev-client",
+                "test-client",
+                "example",
+            ]
+            for key in self.api_keys:
+                key_lower = key.lower()
+                if key_lower in dev_test_keys or any(pat in key_lower for pat in insecure_api_key_patterns):
+                    raise ValueError(
+                        f"Production deployment rejected: Default development/testing API keys must be replaced "
+                        f"with real client credentials (found placeholder or test key '{key}')."
+                    )
+                if len(key) < 16:
+                    raise ValueError(
+                        f"Production deployment rejected: API key '{key}' is too short (must be at least 16 characters)."
+                    )
 
             if "*" in self.cors_allowed_origins:
                 raise ValueError(

@@ -10,7 +10,6 @@ Single-command entrypoint to launch the complete Clinivara platform:
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path

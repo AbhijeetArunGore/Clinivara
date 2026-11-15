@@ -5,7 +5,7 @@
 | Parameter | Local Development Default | Production Recommended |
 | :--- | :--- | :--- |
 | `CLINIVARA_APP_ENV` | `development` | `production` |
-| `CLINIVARA_DEBUG` | `true` | `false` |
+| `CLINIVARA_DEBUG` | `false` | `false` |
 | `CLINIVARA_AUTH_SECRET_KEY` | Hardcoded development key | Injected via AWS Secrets Manager, Vault, or GCP Secret Manager ($\ge 32$ chars) |
 | `CLINIVARA_STORAGE_ROOT` | `data/storage` | High-security mounted volume with encryption-at-rest (POSIX 0700 permissions) |
 | `CLINIVARA_OCR_ENABLED` | `true` | `true` (Tesseract system binaries pre-baked in container) |
@@ -38,4 +38,4 @@ curl -f http://localhost:8000/api/v1/health
 2. **Read-Only Root Filesystem**: The container root filesystem should be mounted read-only, allowing writes only to designated volume paths (`/app/data/storage` and `/app/data/audit`).
 3. **Key Management**: Secrets must never be stored in Git or container images. Use Kubernetes Secrets or cloud secret managers.
 4. **Malware Scanning Integration**: For high-risk deployments, integrate an upstream antivirus/sandbox scanner (such as ClamAV or sandbox service) before files reach Boundary A staging.
-5. **Data Retention & Shredding**: Implement automated lifecycle policies on Boundary A original files to shred records after the statutory retention period.
+5. **Data Retention & Lifecycle Deletion**: Implement automated lifecycle policies on Boundary A original files to remove records after the statutory retention period. Note that application-level deletion uses standard filesystem unlinking (`unlink()`, `shutil.rmtree()`); production enterprise deployments requiring cryptographic erasure or disk sanitization should deploy underlying encrypted volumes (e.g. dm-crypt/LUKS or AWS EBS KMS volume crypto-shredding).

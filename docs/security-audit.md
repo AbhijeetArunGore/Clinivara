@@ -1,23 +1,26 @@
-# Clinivara Security Audit Report
+# Clinivara Internal Security Review & Remediation Report
 
-**Date**: October 19, 2026  
-**Auditor**: Principal Application Security & Privacy Engineering Assessment  
+**Date**: October 19, 2026 (Updated November 15, 2026)  
+**Assessment Type**: Internal Engineering Review & Defensive Hardening Report  
 **Repository**: `Clinivara` (Healthcare Document-Processing & Understanding Prototype)  
-**Security Standard**: Defensive Healthcare Architecture & Privacy Invariant Enforcement  
+**Scope**: Internal zero-trust codebase audit, configuration hardening, and regression verification  
+
+> **Transparency Note**: This report documents an internal engineering security assessment and remediation sprint conducted by the project development team. It represents rigorous internal engineering verification, not an external third-party compliance certification or formal penetration testing engagement.
 
 ---
 
 ## Executive Summary
 
-A comprehensive, zero-trust security audit and engineering hardening mission was executed on the Clinivara clinical document-processing platform. The audit systematically inspected secrets management, API exposure, upload streaming limits, storage trust boundaries, clinical data privacy guarantees, container build contexts, software supply chain dependencies, and CI automation.
+An internal zero-trust security review and engineering hardening sprint was executed on the Clinivara clinical document-processing prototype. The review systematically evaluated secrets management, API exposure, upload streaming limits, storage trust boundaries, clinical data privacy guarantees, container build contexts, software supply chain dependencies, and CI automation.
 
-Prior to remediation, several critical and high-severity weaknesses existed in default configurations (such as fail-open dev credentials in production, missing Docker exclusion manifests, lack of path traversal bounds in storage managers, and unbounded in-memory upload reads).
+Prior to remediation, several high-severity weaknesses existed in default configurations (such as permissive dev credentials in production, missing Docker exclusion manifests, lack of path traversal bounds in storage managers, and unbounded in-memory upload reads).
 
 Following systematic remediation and defensive hardening:
-- **100% of identified actionable vulnerabilities have been resolved in source code and configuration.**
-- **69 automated unit, integration, and security regression tests passed with zero failures.**
-- **A 10-test dedicated security regression suite (`tests/test_security_audit_hardening.py`) verifies all remediated security invariants.**
+- **All identified internal security findings have been resolved in source code and configuration.**
+- **73 automated unit, integration, and security regression tests pass with zero failures.**
+- **A 14-test dedicated security regression suite (`tests/test_security_audit_hardening.py`) continuously verifies all remediated security invariants, including rejection of `.env.example` placeholders in production.**
 - **Code formatting and linting verified with Ruff (zero errors).**
+- **Data Lifecycle Note**: Storage deletion operations (`unlink()`, `shutil.rmtree()`) unlink directory entries across filesystem vault boundaries. They do not claim or provide forensic zeroization of physical sectors on underlying storage hardware.
 
 ---
 
